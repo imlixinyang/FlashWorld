@@ -1,7 +1,7 @@
 <p align="center">
-  <h1 align="center">
-        <img src="https://github.com/imlixinyang/FlashWorld-Project-Page/blob/main/static/images/favicon.svg" alt="FlashWorld" style="height: 2.0rem; width: auto; margin-right: -2rem; vertical-align: middle;">
-        <em>FlashWorld: High-quality 3D Scene Generation within Seconds</em></h1>
+  <h2 align="center">
+        <img src="https://github.com/imlixinyang/FlashWorld-Project-Page/blob/main/static/images/favicon.svg" alt="FlashWorld" style="height: 1.2rem; width: auto; margin-right: -2rem; vertical-align: middle;">
+        <em>FlashWorld: High-quality 3D Scene Generation within Seconds</em></h2>
 
   <p align="center">
         <!-- <a href="https://arxiv.org/pdf/2406.17601"><img src='https://img.shields.io/badge/arXiv-Director3D-red?logo=arxiv' alt='Paper PDF'></a> -->
