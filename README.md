@@ -1,3 +1,4 @@
+
 <p align="center">
   <h2 align="center">
         <img src="https://github.com/imlixinyang/FlashWorld-Project-Page/blob/main/static/images/favicon.svg" alt="FlashWorld" style="height: 1.2rem; width: auto; margin-right: -2rem; vertical-align: middle;">
@@ -9,23 +10,30 @@
         <!-- <a href='https://colab.research.google.com/drive/1LtnxgBU7k4gyymOWuonpOxjatdJ7AI8z?usp=sharing'><img src='https://img.shields.io/badge/Colab_Demo-Director3D-yellow?logo=googlecolab' alt='Project Page'></a> -->
   </p>
 
+
   <p align="center">
   <img width="3182" height="1174" alt="teaser" src="https://github.com/user-attachments/assets/e4aae261-83fd-494d-9b08-00ae265a74e4" />
   </p>
 
 
-https://github.com/user-attachments/assets/488d4169-d8ef-482f-a670-1be6ae00a547
+***TL;DR:*** FlashWorld enables fast (**7 seconds on a single GPU**) and high-quality 3D scene generation across diverse scenes, from a single image or text prompt.
 
 
-**TL;DR:** FlashWorld enables fast and high-quality 3D scene generation across diverse scenes, from a single image or text prompt.
-
-
-
-**🔥 Plans**:
+**🔥 News**:
 
 The code will be released soon. Please stay tuned!
 
-- [10.13] ...
+- [10.14] Paper released.
+
+## Generation Results
+
+https://github.com/user-attachments/assets/bbdbe5de-5e15-4471-b380-4d8191688d82
+
+## Demo
+
+https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
+
+
 
 ## License
 
