@@ -21,13 +21,16 @@
 
 **🔥 News**:
 
+
+
 The code will be released soon. Please stay tuned!
 
 - [10.14] Paper released.
 
 ## Generation Results
 
-https://github.com/user-attachments/assets/bbdbe5de-5e15-4471-b380-4d8191688d82
+[https://github.com/user-attachments/assets/bbdbe5de-5e15-4471-b380-4d8191688d82](https://github.com/user-attachments/assets/53d41748-4c35-48c4-9771-f458421c0b38)
+
 
 ## Demo
 
