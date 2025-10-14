@@ -5,7 +5,7 @@
         <em>FlashWorld: High-quality 3D Scene Generation within Seconds</em></h2>
 
   <p align="center">
-        <!-- <a href="https://arxiv.org/pdf/2406.17601"><img src='https://img.shields.io/badge/arXiv-Director3D-red?logo=arxiv' alt='Paper PDF'></a> -->
+        <a href="https://arxiv.org/pdf/xxx"><img src='https://img.shields.io/badge/arXiv-FlashWorld-red?logo=arxiv' alt='Paper PDF'></a>
         <a href='https://imlixinyang.github.io/FlashWorld-Project-Page'><img src='https://img.shields.io/badge/Project_Page-FlashWorld-green' alt='Project Page'></a>
         <!-- <a href='https://colab.research.google.com/drive/1LtnxgBU7k4gyymOWuonpOxjatdJ7AI8z?usp=sharing'><img src='https://img.shields.io/badge/Colab_Demo-Director3D-yellow?logo=googlecolab' alt='Project Page'></a> -->
   </p>
@@ -16,26 +16,62 @@
   </p>
 
 
-***TL;DR:*** FlashWorld enables fast (**7 seconds on a single GPU**) and high-quality 3D scene generation across diverse scenes, from a single image or text prompt.
+***TL;DR:*** FlashWorld enables fast (**7 seconds on a single A100/A800 GPU**) and high-quality 3D scene generation across diverse scenes, from a single image or text prompt.
 
-
-**🔥 News**:
-
-
-
-The code will be released soon. Please stay tuned!
-
-- [10.14] Paper released.
-
-## Generation Results
-
-[https://github.com/user-attachments/assets/bbdbe5de-5e15-4471-b380-4d8191688d82](https://github.com/user-attachments/assets/53d41748-4c35-48c4-9771-f458421c0b38)
-
+FlashWorld also supports slightly slower generation with only **24GB** GPU memory.
 
 ## Demo
 
 https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
 
+## 🔥 News:
+
+The code will be released soon. Please stay tuned!
+
+- [2025.10.15] Paper released.
+
+## Installation
+
+- install packages
+```
+pip install torch torchvision
+pip install triton transformers pytorch_lightning omegaconf ninja numpy jaxtyping rich tensorboard einops moviepy==1.0.3 webdataset accelerate opencv-python lpips av plyfile ftfy peft tensorboard pandas flask
+```
+
+- install ```gsplat@1.5.2``` and ```diffusers@wan-5Bi2v``` packages
+```
+pip install git+https://github.com/nerfstudio-project/gsplat.git@32f2a54d21c7ecb135320bb02b136b7407ae5712
+pip install git+https://github.com/huggingface/diffusers.git@447e8322f76efea55d4769cd67c372edbf0715b8
+```
+
+- clone this repo:
+```
+git clone https://github.com/imlixinyang/FlashWorld.git
+cd FlashWorld
+```
+
+- download the pre-trained model by:
+```
+wget https://huggingface.co/imlixinyang/flashworld_ckpt/resolve/main/model.ckpt?download=true -O model.ckpt
+```
+
+- run our demo backend by:
+```
+python backend.py
+```
+
+- open frontend webpage at ```index.html```, possibly by:
+```
+pip install tiny-http-server 
+tiny-http-server --directory / --port 8081 --bind 0.0.0.0 --auth username:password
+```
+
+Then, enjoy your journey in FlashWorld!
+  
+
+## More Generation Results
+
+[https://github.com/user-attachments/assets/bbdbe5de-5e15-4471-b380-4d8191688d82](https://github.com/user-attachments/assets/53d41748-4c35-48c4-9771-f458421c0b38)
 
 
 ## License
