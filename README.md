@@ -18,7 +18,7 @@
 
 ***TL;DR:*** FlashWorld enables fast (**7 seconds on a single A100/A800 GPU**) and high-quality 3D scene generation across diverse scenes, from a single image or text prompt.
 
-FlashWorld also supports slightly slower generation with only **24GB** GPU memory.
+FlashWorld also supports generation with only **24GB** GPU memory!
 
 ## Demo
 
