@@ -50,20 +50,9 @@ git clone https://github.com/imlixinyang/FlashWorld.git
 cd FlashWorld
 ```
 
-- download the pre-trained model by:
+- run our demo app by:
 ```
-wget https://huggingface.co/imlixinyang/flashworld_ckpt/resolve/main/model.ckpt?download=true -O model.ckpt
-```
-
-- run our demo backend by:
-```
-python backend.py
-```
-
-- open frontend webpage at ```index.html```, possibly by:
-```
-pip install tiny-http-server 
-tiny-http-server --directory / --port 8081 --bind 0.0.0.0 --auth username:password
+python app.py
 ```
 
 Then, enjoy your journey in FlashWorld!
