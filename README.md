@@ -26,7 +26,7 @@ https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
 
 ## 🔥 News:
 
-The code will be released soon. Please stay tuned!
+The code and demo will be released soon. Please stay tuned!
 
 - [2025.10.15] Paper released.
 
