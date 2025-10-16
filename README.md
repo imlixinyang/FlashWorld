@@ -26,9 +26,9 @@ https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
 
 ## 🔥 News:
 
-The code and demo will be released soon (in few days). Please stay tuned!
+We are actively building an online demo. Please stay tuned!
 
-- [2025.10.15] Paper released.
+- [2025.10.16] Paper and local demo code released.
 
 ## Installation
 
@@ -56,6 +56,8 @@ cd FlashWorld
 ```
 python app.py
 ```
+
+If your machine has limited GPU memory, consider adding the ```--offload_t5``` flag to offload text encoding to the CPU, which will reduce GPU memory usage. Note that this may slow down the generation speed somewhat.
 
 Then, open your web browser and navigate to ```http://HOST_IP:7860``` to start exploring FlashWorld!
 
