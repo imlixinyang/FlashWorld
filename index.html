@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashWorld Demo</title>
+    <meta name="description" content="">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .main-container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: white;
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .header-title-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+        
+        .header-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 8px;
+        }
+        
+        .header-links a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-size: 0.9em;
+            padding: 5px 10px;
+            border: 1px solid #60a5fa;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .header-links a:hover {
+            background: #60a5fa;
+            color: white;
+        }
+        
+        .content-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .left-panel {
+            width: 280px;
+            background: rgba(0, 0, 0, 0.7);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .center-panel {
+            flex: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .right-panel {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.7);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .guidance {
+            color: #e5e7eb;
+        }
+        
+        .guidance h2 {
+            color: #ffffff;
+            margin-top: 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #60a5fa;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+
+        .gui-container h2{
+            color: #ffffff;
+            margin-top: 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #60fae5;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            margin: 12px 0;
+            padding: 12px;
+            background: rgba(96, 165, 250, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #60a5fa;
+        }
+        
+        .step h3 {
+            margin: 0 0 8px 0;
+            color: #ffffff;
+            font-size: 1em;
+        }
+        
+        .step p {
+            margin: 4px 0;
+            line-height: 1.4;
+            font-size: 0.85em;
+            color: #d1d5db;
+        }
+        
+        .controls-info {
+            background: rgba(168, 85, 247, 0.1);
+            border-left: 3px solid #a855f7;
+        }
+        
+        .keyboard-shortcuts {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid #22c55e;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 300px;
+            min-height: 200px;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1000;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .generation-info {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid #22c55e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            color: #22c55e;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background: linear-gradient(90deg, #60a5fa, #3b82f6);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 0.8em;
+            white-space: nowrap;
+        }
+
+        /* Info tooltip */
+        .info-tip {
+            display: inline-block;
+            position: relative;
+            margin-left: 8px;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            text-align: center;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: #fff;
+            font-size: 12px;
+            cursor: default;
+            user-select: none;
+        }
+        .info-tip .tooltip {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: calc(100% + 8px); /* show below the icon */
+            transform: none;
+            background: rgba(0,0,0,0.9);
+            color: #e5e7eb;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 12px;
+            width: 360px; /* wider tooltip */
+            white-space: normal;
+            z-index: 2000; /* above GUI and other elements */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .info-tip:hover .tooltip {
+            display: block;
+        }
+        
+        .status-bar {
+            background: rgba(0, 0, 0, 0.9);
+            color: #60a5fa;
+            padding: 8px 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    #1a1a1a 0px,
+                    #1a1a1a 10px,
+                    #2a2a2a 10px,
+                    #2a2a2a 20px
+                );
+            position: relative;
+        }
+        
+        .canvas-wrapper {
+            position: relative;
+            border: 2px solid #444;
+            background: #111;
+            box-shadow: 
+                0 0 20px rgba(0, 0, 0, 0.5),
+                inset 0 0 10px rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+        
+        .canvas-wrapper canvas {
+            display: block;
+            border-radius: 2px;
+        }
+        
+        /* Add a subtle animation to the canvas wrapper */
+        .canvas-wrapper:hover {
+            border-color: #666;
+            box-shadow: 
+                0 0 30px rgba(0, 0, 0, 0.7),
+                inset 0 0 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Progress & status beautify */
+        .progress-container {
+            width: 100%;
+            height: 18px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 999px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.35) inset;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #60a5fa, #8b5cf6);
+            box-shadow: 0 0 10px rgba(96,165,250,0.65);
+            position: relative;
+            transition: width .15s ease;
+        }
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 11px;
+            color: #f8fafc;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .status-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+        }
+        .badge .dot { width: 8px; height: 8px; border-radius: 999px; }
+        .badge.queue .dot { background: #f59e0b; }
+        .badge.running .dot { background: #22c55e; }
+        .badge.time .dot { background: #60a5fa; }
+        .badge.bytes .dot { background: #a78bfa; }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px 12px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        .details-grid div { opacity: 0.9; }
+        
+        /* Canvas resizing indicator */
+        .canvas-wrapper.resizing {
+            border-color: #60a5fa;
+            box-shadow: 
+                0 0 25px rgba(96, 165, 250, 0.3),
+                inset 0 0 10px rgba(96, 165, 250, 0.1);
+        }
+        
+        .canvas-wrapper.resizing::after {
+            content: "Resizing...";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #60a5fa;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        /* GUI Panel Styling */
+        .gui-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 400px;
+        }
+        
+        .gui-panel .lil-gui {
+            --background-color: rgba(0, 0, 0, 0.8);
+            --text-color: #ffffff;
+            --title-background-color: rgba(96, 165, 250, 0.2);
+            --title-text-color: #ffffff;
+            --widget-color: rgba(96, 165, 250, 0.3);
+            --hover-color: rgba(96, 165, 250, 0.5);
+        }
+        
+        /* Ensure GUI is visible */
+        .lil-gui {
+            position: relative !important;
+            z-index: 1000 !important;
+        }
+        
+        @media (max-width: 1200px) {
+            .left-panel {
+                width: 250px;
+            }
+            
+            .right-panel {
+                width: 280px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content-container {
+                flex-direction: column;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+            
+            .center-panel {
+                flex: 1;
+                min-height: 400px;
+            }
+        }
+    </style>
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.6/spark.module.js",
+      "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm"
+    }
+  }
+</script>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header Section -->
+        <header class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <h1 style="margin: 0; flex: 1; text-align: left;">
+                  <span class="header-title-wrap">FlashWorld Spark Demo
+                    <span class="info-tip">!
+                      <span class="tooltip" style="max-width: 260px; text-align: left;">Note: Front-end real-time rend ering in Spark uses compressed Gaussian Splat attributes. Visual quality in this demo may be lower than offline/back-end rendering.
+                      Also, the generation is fast but the downloading may be slow, please be patient.
+                      </span>
+                    </span>
+                  </span>
+                </h1>
+                <div class="header-links" style="margin-left: 20px;">
+                    <a href="#" target="_blank">Paper</a>
+                    <a href="#" target="_blank">Code</a>
+                    <a href="#" target="_blank">Project Page</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Container -->
+        <div class="content-container">
+            <!-- Left Panel: Simplified Guidance -->
+            <div class="left-panel">
+                <div class="guidance">
+                    <h2>Instructions</h2>
+                    
+                    <div class="step">
+                        <h3>1. Configure</h3>
+                        <p>Set FOV and Resolution and Click "Fix Configurations"</p>
+                    </div>
+
+
+                    <div class="step">
+                        <h3>2. Set Camera Trajectory</h3>
+                        <p><b>Manual:</b> Navigate with mouse and keyboard, press <kbd>Space</kbd> to record</p>
+                        <p><b>Template:</b> Select template type and click "Generate Trajectory"</p>
+                        <p><b>JSON:</b> Load trajectory from JSON file</p>
+                    </div>
+
+                    <div class="step">
+                        <h3>3. Add Prompts</h3>
+                        <p>Upload image or enter text description</p>
+                    </div>
+
+                    <div class="step">
+                        <h3>4. Generate</h3>
+                        <p>Click "Generate!" to create your scene</p>
+                    </div>
+
+                    <div class="step controls-info">
+                        <h3>Controls</h3>
+                        <p><strong>Mouse/QE:</strong> Rotate view</p>
+                        <p><strong>WASD/RF:</strong> Move</p>
+                        <p><strong>Space:</strong> Record camera</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Center Panel: Canvas -->
+            <div class="center-panel">
+                <div class="canvas-container" id="canvas-container">
+                    <div class="canvas-wrapper" id="canvas-wrapper">
+                        <div class="loading" id="loading">
+                            <h3>🎬 Generating Scene...</h3>
+                            <p>Please wait while we create your 3D scene</p>
+                            <div id="generation-info" class="generation-info" style="display: none;">
+                                <div><strong>Generation Time:</strong> <span id="generation-time">-</span> seconds</div>
+                                <div><strong>File Size:</strong> <span id="file-size">-</span> MB</div>
+                            </div>
+                            <div id="download-progress" style="display: none;">
+                                <div class="progress-container">
+                                    <div class="progress-bar" id="progress-bar"></div>
+                                    <div class="progress-text" id="progress-text">0%</div>
+                                </div>
+                                <div class="status-badges" id="status-badges" style="display: none;">
+                                    <div class="badge queue" id="badge-queue"><span class="dot"></span><span id="badge-queue-text">Queue</span></div>
+                                    <div class="badge running" id="badge-running" style="display: none;"><span class="dot"></span><span id="badge-running-text">Running</span></div>
+                                    <div class="badge time" id="badge-time" style="display: none;"><span class="dot"></span><span id="badge-time-text">00:00</span></div>
+                                </div>
+                                <div id="queue-details" class="details-grid" style="display: none;"></div>
+                                <div id="download-details" class="details-grid" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: GUI -->
+            <div class="right-panel">
+              <div class="gui-container">
+                <!-- <h2>GUI</h2> -->
+                <div class="gui-panel" id="gui-container">
+                    <!-- GUI will be inserted here -->
+                </div>
+              </div>
+                
+                <!-- Image Preview Area -->
+                <div id="image-preview-area" style="padding: 10px; display: none;">
+                    <div style="font-size: 12px; color: #ccc; margin-bottom: 8px; text-align: left;">Input Image Preview</div>
+                    <div style="text-align: center;">
+                        <img id="preview-img" style="max-width: 100%; max-height: 200px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar" id="status-bar">
+            Ready to generate 3D scenes | Cameras: 0 | Status: Waiting for input
+        </div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+<input id="file-input" type="file" accept=".jpg,.png,.jpeg" multiple="true" style="display: none;" />
+<input id="json-input" type="file" accept=".json" multiple="false" style="display: none;" />
+
+<script type="module">
+  // =========================
+  // Imports & Global Variables
+  // =========================
+  import * as THREE from "three";
+  import { SplatMesh, SparkControls, textSplats } from "@sparkjsdev/spark";
+  import GUI from "lil-gui";
+
+  // Scene, Camera, Renderer, Controls
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 1.5);
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  
+  // Wait for DOM to be ready
+  function initializeRenderer() {
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+    if (canvasWrapper) {
+      canvasWrapper.appendChild(renderer.domElement);
+      
+      // Set initial canvas size based on current resolution
+      updateCanvasSize();
+      console.log('Canvas initialized in wrapper');
+    } else {
+      console.error('Canvas wrapper not found');
+    }
+  }
+  
+  // Update canvas size based on selected resolution
+  function updateCanvasSize() {
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+    if (!canvasWrapper) return;
+    
+    // Show resizing indicator
+    canvasWrapper.classList.add('resizing');
+    
+    // Get current resolution from GUI options
+    const resolution = guiOptions.Resolution.split('x');
+    const width = parseInt(resolution[2]) || 704;  // W
+    const height = parseInt(resolution[1]) || 480; // H
+    
+    // Set canvas size
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    
+    // Update wrapper size to match canvas
+    canvasWrapper.style.width = width + 'px';
+    canvasWrapper.style.height = height + 'px';
+    
+    // Remove resizing indicator after a short delay
+    setTimeout(() => {
+      canvasWrapper.classList.remove('resizing');
+    }, 300);
+    
+    console.log('Canvas size updated:', width, 'x', height);
+  }
+  
+  const controls = new SparkControls({ canvas: renderer.domElement });
+
+  // Camera splats and params
+  const cameraSplats = [];
+  const cameraParams = [];
+  const interpolatedCamerasSplats = [];
+
+  // State
+  let fixGenerationFOV = false;
+  let inputImageBase64 = null;
+  let inputImageResolution = null;
+  let currentGeneratedSplat = null; // 跟踪当前生成的场景
+
+  // UI Elements
+  const loadingElement = document.getElementById('loading');
+  const statusBar = document.getElementById('status-bar');
+  
+  // GUI variable - declare early
+  let gui = null;
+  
+  // Status update function
+  function updateStatus(message, cameraCount = null) {
+    const cameraText = cameraCount !== null ? `Cameras: ${cameraCount}` : `Cameras: ${cameraParams.length}`;
+    statusBar.textContent = `${message} | ${cameraText} | Status: ${fixGenerationFOV ? 'Ready to record' : 'Configure settings'}`;
+  }
+  
+  // Show/hide loading
+  function showLoading(show) {
+    loadingElement.style.display = show ? 'block' : 'none';
+  }
+  
+  // Show generation info
+  function showGenerationInfo(generationTime, fileSize) {
+    const generationInfo = document.getElementById('generation-info');
+    const generationTimeElement = document.getElementById('generation-time');
+    const fileSizeElement = document.getElementById('file-size');
+    
+    generationTimeElement.textContent = generationTime.toFixed(2);
+    fileSizeElement.textContent = (fileSize / (1024 * 1024)).toFixed(2);
+    generationInfo.style.display = 'block';
+  }
+  
+  // Show download progress
+  function showDownloadProgress() {
+    const downloadProgress = document.getElementById('download-progress');
+    downloadProgress.style.display = 'block';
+    const qd = document.getElementById('queue-details');
+    const dd = document.getElementById('download-details');
+    const badges = document.getElementById('status-badges');
+    if (qd) qd.style.display = 'none';
+    if (dd) dd.style.display = 'none';
+    if (badges) badges.style.display = 'none';
+  }
+  
+  // Update progress bar
+  function updateProgressBar(percentage) {
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    
+    progressBar.style.width = percentage + '%';
+    progressText.textContent = `${Math.round(percentage)}%`;
+  }
+
+  // Update progress label text (stage indicator)
+  function setProgressLabel(text) {
+    const progressText = document.getElementById('progress-text');
+    if (progressText) progressText.textContent = text;
+  }
+
+  // ==============
+  // Queue handling
+  // ==============
+  let queuePollTimer = null;
+  let currentTaskId = null;
+  let initialQueuePosition = null;
+  let latestGenerationTime = null;
+  let lastDownloadPct = 0;
+  let lastDownloadUpdateTs = 0;
+
+  function showQueueWaiting(position, runningCount, queuedCount) {
+    // Use only the progress bar to show queue progress (from initial position to 0)
+    showDownloadProgress();
+    if (initialQueuePosition === null) {
+      // Initialize from first seen position; ensure >= 1 so 0 -> 100%
+      const initPos = (typeof position === 'number') ? position : 0;
+      initialQueuePosition = Math.max(initPos, 1);
+    }
+    const percent = initialQueuePosition && initialQueuePosition > 0
+      ? Math.max(0, Math.min(100, ((initialQueuePosition - (position || 0)) / initialQueuePosition) * 100))
+      : 0;
+    updateProgressBar(percent);
+    const totalWaiting = (position || 0) + (queuedCount || 0);
+    if (position !== null && position !== undefined) {
+      const pctText = `${Math.round(percent)}%`;
+      if (totalWaiting > 0) {
+        setProgressLabel(`Queued ${position}/${totalWaiting} (${pctText})`);
+      } else {
+        setProgressLabel(`Queued ${position} (${pctText})`);
+      }
+    } else {
+      setProgressLabel('Queued');
+    }
+  }
+
+  async function pollTaskUntilReady(taskId) {
+    currentTaskId = taskId;
+    initialQueuePosition = null;
+    if (queuePollTimer) {
+      clearInterval(queuePollTimer);
+      queuePollTimer = null;
+    }
+    const queueStartTs = Date.now();
+
+    const pollOnce = async () => {
+      try {
+        const resp = await fetch(`${guiOptions.BackendAddress}/task/${taskId}`);
+        if (!resp.ok) return;
+        const info = await resp.json();
+        if (!info || !info.success) return;
+
+        const pos = info.queue && typeof info.queue.position === 'number' ? info.queue.position : 0;
+        const running = info.queue ? info.queue.running_count : 0;
+        const queued = info.queue ? info.queue.queued_count : 0;
+        if (info.status === 'queued' || info.status === 'running') {
+          // Only progress bar; set stage label
+          if (info.status === 'queued') {
+            showQueueWaiting(pos, running, queued);
+          } else {
+            // Transitioned to running: finalize queue progress visually
+            updateProgressBar(100);
+            showDownloadProgress();
+            setProgressLabel('Generating...');
+          }
+        }
+
+        if (info.status === 'completed' && info.download_url) {
+          clearInterval(queuePollTimer);
+          queuePollTimer = null;
+          latestGenerationTime = typeof info.generation_time === 'number' ? info.generation_time : null;
+          // Proceed to download the generated file like the normal path
+          updateStatus('Downloading generated scene...', cameraParams.length);
+          const response = await fetch(guiOptions.BackendAddress + info.download_url);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const contentLength = response.headers.get('content-length');
+          const total = parseInt(contentLength || '0', 10);
+          // Show generation info immediately once we know it and total size from headers
+          showGenerationInfo(latestGenerationTime || 0, total);
+          let loaded = 0;
+          const reader = response.body.getReader();
+          const chunks = [];
+          updateProgressBar(0);
+          setProgressLabel('Downloading 0%');
+          lastDownloadPct = 0;
+          lastDownloadUpdateTs = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            loaded += value.length;
+            if (total) {
+              const pct = Math.min(100, (loaded / total) * 100);
+              const now = Date.now();
+              const rounded = Math.round(pct);
+              // Throttle and enforce monotonic increase
+              if (rounded > Math.round(lastDownloadPct) || (now - lastDownloadUpdateTs) > 200) {
+                lastDownloadPct = Math.max(lastDownloadPct, pct);
+                updateProgressBar(lastDownloadPct);
+                setProgressLabel(`Downloading ${Math.round(lastDownloadPct)}%`);
+                lastDownloadUpdateTs = now;
+              }
+            }
+          }
+          
+          if (instructionSplat) {
+            scene.remove(instructionSplat);
+            console.log('Instruction splat removed');
+            instructionSplat = null;
+          }
+
+          const blob = new Blob(chunks);
+          const url = URL.createObjectURL(blob);
+          // Continue to load the splat
+          updateStatus('Loading generated scene...', cameraParams.length);
+          
+          const GeneratedSplat = new SplatMesh({ url });
+          scene.add(GeneratedSplat);
+          currentGeneratedSplat = GeneratedSplat;
+          updateStatus('Scene generated successfully!', cameraParams.length);
+          // Show generation time and total file size (MB)
+          showGenerationInfo(latestGenerationTime || 0, total || blob.size);
+          // Notify backend to delete the server file after client has downloaded it
+          try {
+            if (info.file_id) {
+              const resp = await fetch(`${guiOptions.BackendAddress}/delete/${info.file_id}`, { method: 'POST' });
+              if (!resp.ok) console.warn('Delete notify failed');
+            }
+          } catch (e) {
+            console.warn('Delete notify error', e);
+          }
+          hideDownloadProgress();
+          showLoading(false);
+        } else if (info.status === 'failed') {
+          clearInterval(queuePollTimer);
+          queuePollTimer = null;
+          throw new Error(info.error || 'Generation failed');
+        }
+      } catch (e) {
+        console.debug('Polling error:', e);
+      }
+    };
+
+    await pollOnce();
+    queuePollTimer = setInterval(pollOnce, 2000);
+  }
+  
+  // Hide download progress
+  function hideDownloadProgress() {
+    const downloadProgress = document.getElementById('download-progress');
+    downloadProgress.style.display = 'none';
+  }
+  
+  // Playback scrubber (0..1)
+  let userCameraState = null; // 存储用户播放前的相机状态
+  
+  // 根据时间比例获取插值相机
+  function getInterpolatedCameraAtTime(t) {
+    if (cameraParams.length === 0) {
+      return camera;
+    }
+    
+    if (cameraParams.length === 1) {
+      return cameraParams[0];
+    }
+    
+    // 确保t在有效范围内
+    const clampedT = Math.max(0, Math.min(1, t));
+    
+    // 计算在相机序列中的位置
+    const cameraIndex = clampedT * (cameraParams.length - 1);
+    const startIndex = Math.min(Math.floor(cameraIndex), cameraParams.length - 2);
+    const endIndex = startIndex + 1;
+    const startCamera = cameraParams[startIndex];
+    const endCamera = cameraParams[endIndex];
+    
+    // 计算两个相机之间的插值比例
+    const _t = cameraIndex - startIndex;
+    
+    // 使用interpolateTwoCameras进行插值
+    return interpolateTwoCameras(startCamera, endCamera, _t);
+  }
+  
+  function setCameraByScrub(t) {
+    if (cameraParams.length === 0) return;
+    const clampedT = Math.max(0, Math.min(1, t));
+    const camT = getInterpolatedCameraAtTime(clampedT);
+    camera.position.copy(camT.position);
+    camera.quaternion.copy(camT.quaternion);
+    camera.fov = camT.fov;
+    camera.updateProjectionMatrix();
+  }
+  
+  // Supported resolutions
+  const supportedResolutions = [
+    { frame: 24, width: 704, height: 480 },
+    { frame: 24, width: 480, height: 704 }
+  ];
+  
+  // GUI Options - declare early
+  const guiOptions = {
+    // 后端地址，默认为本页面ip
+    BackendAddress: `${window.location.protocol}//${window.location.hostname}:7860`,
+    FOV: 60,
+    LoadFromJson: () => { 
+      const jsonInput = document.querySelector("#json-input");
+      if (jsonInput) jsonInput.click(); 
+    },
+        LoadTrajectoryFromJson: () => {
+          if (!fixGenerationFOV) {
+            updateStatus('Warning: Please fix configuration first before loading trajectory', cameraParams.length);
+            return;
+          }
+          // 设置标志，表示只加载轨迹
+          window.loadTrajectoryOnly = true;
+          const jsonInput = document.querySelector("#json-input");
+          if (jsonInput) jsonInput.click();
+        },
+    fixGenerationFOV: () => {
+      // These controllers will be set when GUI is initialized
+      if (window.fixGenerationFOVController) window.fixGenerationFOVController.disable();
+      fixGenerationFOV = true;
+
+      const new_camera = new THREE.PerspectiveCamera(guiOptions.FOV, guiOptions.Resolution.split('x')[2] / guiOptions.Resolution.split('x')[1]);
+      new_camera.position.set(0, 0, 0);
+      new_camera.quaternion.set(0, 0, 0, 1);
+      new_camera.updateProjectionMatrix();
+
+      const cameraSplat = createCameraSplat(new_camera);
+      cameraSplats.push(cameraSplat);
+      cameraParams.push({
+        position: new_camera.position.clone(),
+        quaternion: new_camera.quaternion.clone(),
+        fov: new_camera.fov,
+        aspect: new_camera.aspect,
+      });
+      scene.add(cameraSplat);
+
+      updateStatus('Camera settings fixed. Press Space to record cameras.', cameraParams.length);
+    },
+    Resolution: `${supportedResolutions[0].frame}x${supportedResolutions[0].height}x${supportedResolutions[0].width}`,
+    VisualizeCameraSplats: true,
+    VisualizeInterpolatedCameras: true,
+    inputImagePrompt: () => { 
+      const fileInput = document.querySelector("#file-input");
+      if (fileInput) {
+        // 仅触发选择，由全局处理程序完成裁剪与预览更新
+        fileInput.click();
+      }
+    },
+    imageIndex: 0,
+    inputTextPrompt: "",
+    
+    // Camera trajectory templates
+    trajectoryMode: "Manual",
+    templateType: "Move Forward",
+    cameraTrajectory: "Manual",
+    trajectorySettings: {
+      angle: 180,      // 角度 (180, 360)
+      tilt: 15         // 倾斜角 (15, 30, 45)
+    },
+    generateTrajectory: () => {
+      generateCameraTrajectory(guiOptions.templateType);
+    },
+    saveTrajectoryToJson: () => {
+      if (cameraParams.length === 0) {
+        updateStatus('No cameras to save.', cameraParams.length);
+        console.warn('No cameras to save');
+        return;
+      }
+
+      // Build JSON payload compatible with loader
+      const [nStr, hStr, wStr] = guiOptions.Resolution.split('x');
+      const n = parseInt(nStr), h = parseInt(hStr), w = parseInt(wStr);
+      const payload = {
+        // image_prompt: null,
+        // text_prompt: guiOptions.inputTextPrompt || "",
+        // image_index: guiOptions.imageIndex || 0,
+        // resolution: [n, h, w],
+        cameras: cameraParams.map(cam => ({
+          position: [cam.position.x, cam.position.y, cam.position.z],
+          quaternion: [cam.quaternion.w, cam.quaternion.x, cam.quaternion.y, cam.quaternion.z]
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trajectory_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      updateStatus('Trajectory saved to JSON.', cameraParams.length);
+    },
+    clearAllCameras: () => {
+      if (cameraParams.length <= 1) {
+        updateStatus('No cameras to clear (first camera is always preserved)', cameraParams.length);
+        return;
+      }
+
+      // Keep the first camera, remove all others
+      const firstCamera = cameraParams[0];
+      const firstSplat = cameraSplats[0];
+      
+      // Remove all camera splats except the first one
+      for (let i = cameraSplats.length - 1; i >= 1; i--) {
+        scene.remove(cameraSplats[i]);
+      }
+      
+      // Keep only the first camera in arrays
+      cameraSplats.length = 1;
+      cameraParams.length = 1;
+      
+      // Clear all interpolated camera splats from scene
+      interpolatedCamerasSplats.forEach(splat => scene.remove(splat));
+      interpolatedCamerasSplats.length = 0;
+      
+      updateStatus('Cameras cleared (first camera preserved). Ready to add more cameras.', 1);
+      console.log('Cameras cleared, first camera preserved');
+    },
+    // Playback scrub value (0..1)
+    playbackT: 0,
+    
+    generate: () => {
+      // 检查是否有足够的相机
+      if (cameraParams.length < 2) {
+        console.error('Need at least 2 cameras to generate. Please press Space to record more cameras.');
+        updateStatus('Error: Need at least 2 cameras', cameraParams.length);
+        return;
+      }
+
+      updateStatus('Preparing generation...', cameraParams.length);
+      
+      // 删除之前生成的场景
+      if (currentGeneratedSplat) {
+        scene.remove(currentGeneratedSplat);
+        currentGeneratedSplat = null;
+        console.log('Previous generated scene removed');
+      }
+      
+      // 初始化进度条信息
+      const generationTimeElement = document.getElementById('generation-time');
+      const fileSizeElement = document.getElementById('file-size');
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      
+      if (generationTimeElement) generationTimeElement.textContent = '-';
+      if (fileSizeElement) fileSizeElement.textContent = '-';
+      if (progressBar) progressBar.style.width = '0%';
+      if (progressText) progressText.textContent = '0%';
+      
+      // 隐藏生成信息和下载进度
+      const generationInfo = document.getElementById('generation-info');
+      const downloadProgress = document.getElementById('download-progress');
+      if (generationInfo) generationInfo.style.display = 'none';
+      if (downloadProgress) downloadProgress.style.display = 'none';
+      
+      showLoading(true);
+
+      // 生成插值相机并可视化
+      const interpolatedCameras = interpolateCameras(cameraParams, parseInt(guiOptions.Resolution.split('x')[0]));
+      interpolatedCameras.forEach(cam => {
+        const interpolatedCameraSplat = createCameraSplat(cam, [0.5, 0.5, 0.5]);
+        interpolatedCamerasSplats.push(interpolatedCameraSplat);
+        scene.add(interpolatedCameraSplat);
+      });
+
+      console.log('Sending request to backend...');
+      console.log('Interpolated cameras:', interpolatedCameras.length);
+      updateStatus('Sending request to backend...', cameraParams.length);
+
+      // 根据后端类型选择不同的请求方式
+      let requestUrl, requestBody;
+      
+      if (true) {
+        // Flask后端：直接POST到/generate
+        requestUrl = guiOptions.BackendAddress + '/generate';
+        requestBody = JSON.stringify({
+          image_prompt: inputImageBase64 ? inputImageBase64 : "",
+          text_prompt: guiOptions.inputTextPrompt,
+          image_index: 0,
+          resolution: [
+            parseInt(guiOptions.Resolution.split('x')[0]), 
+            parseInt(guiOptions.Resolution.split('x')[1]), 
+            parseInt(guiOptions.Resolution.split('x')[2])
+          ],
+          cameras: interpolatedCameras.map(cam => ({
+            position: [cam.position.x, cam.position.y, cam.position.z],
+            quaternion: [cam.quaternion.w, cam.quaternion.x, cam.quaternion.y, cam.quaternion.z],
+            fx: 0.5 / Math.tan(0.5 * cam.fov * Math.PI / 180) * parseInt(guiOptions.Resolution.split('x')[1]),
+            fy: 0.5 / Math.tan(0.5 * cam.fov * Math.PI / 180) * parseInt(guiOptions.Resolution.split('x')[1]),
+            cx: inputImageBase64 && inputImageResolution
+              ? 0.5 * inputImageResolution.width
+              : 0.5 * parseInt(guiOptions.Resolution.split('x')[2]),
+            cy: inputImageBase64 && inputImageResolution
+              ? 0.5 * inputImageResolution.height
+              : 0.5 * parseInt(guiOptions.Resolution.split('x')[1]),
+          }))
+        });
+      } else {
+        
+      }
+
+      // 请求后端生成（异步：返回task_id并开始排队轮询）
+      fetch(requestUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        mode: 'cors',
+        body: requestBody
+      })
+      .then(response => {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return response.json();
+        } else {
+          return response.blob().then(blob => {
+            const url = URL.createObjectURL(blob);
+            return { url };
+          });
+        }
+      })
+      .then(data => {
+        console.log(data);
+        {
+          // 异步队列协议：后端返回 task_id + queue 信息（202）
+          if (data && data.success && data.task_id) {
+            updateStatus('Queued request submitted. Waiting in queue...', cameraParams.length);
+            showQueueWaiting(data.queue?.position || 0, data.queue?.running_count || 0, data.queue?.queued_count || 0);
+            // 轮询直到任务完成并下载
+            return pollTaskUntilReady(data.task_id).then(() => ({ url: null }));
+          }
+          // 兼容旧的直接文件响应格式
+          if (data && data.url) {
+            updateStatus('Loading generated scene...', cameraParams.length);
+            return Promise.resolve(data);
+          }
+          throw new Error('Invalid Flask response (expected task_id)');
+        }
+      })
+      .then(data => {
+        if (data.url) {
+          updateStatus('Loading 3D scene...', cameraParams.length);
+          // Remove the instruction splat when generation is complete
+          if (instructionSplat) {
+            scene.remove(instructionSplat);
+            console.log('Instruction splat removed');
+          }
+          const GeneratedSplat = new SplatMesh({ url: data.url });
+          scene.add(GeneratedSplat);
+          currentGeneratedSplat = GeneratedSplat; // 保存新生成的场景引用
+          console.log('3D scene loaded successfully!');
+          updateStatus('Scene generated successfully!', cameraParams.length);
+          hideDownloadProgress();
+          showLoading(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        updateStatus('Generation failed: ' + error.message, cameraParams.length);
+        hideDownloadProgress();
+        showLoading(false);
+      });
+    }
+  };
+
+  // Initialize renderer and GUI when DOM is ready
+  function initializeApp() {
+    try {
+      // Debug layout
+      console.log('Initializing app...');
+      console.log('Center panel:', document.querySelector('.center-panel'));
+      console.log('GUI container:', document.getElementById('gui-container'));
+      console.log('Right panel:', document.querySelector('.right-panel'));
+      
+      initializeRenderer();
+      initializeGUI();
+      console.log('App initialization complete');
+    } catch (error) {
+      console.error('App initialization failed:', error);
+    }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  } else {
+    initializeApp();
+  }
+
+  // =========================
+  // Utility & Core Functions
+  // =========================
+
+  // 计算插值相机
+  function interpolateTwoCameras(startCamera, endCamera, _t) {
+    const interpolatedCamera = new THREE.PerspectiveCamera(startCamera.fov, startCamera.aspect);
+    
+    // 如果_t接近0，直接使用startCamera
+    if (_t < 1e-6) {
+      interpolatedCamera.position.copy(startCamera.position);
+      interpolatedCamera.quaternion.copy(startCamera.quaternion);
+    }
+    // 如果_t接近1，直接使用endCamera
+    else if (_t > 1 - 1e-6) {
+      interpolatedCamera.position.copy(endCamera.position);
+      interpolatedCamera.quaternion.copy(endCamera.quaternion);
+    }
+    // 否则进行插值
+    else {
+      interpolatedCamera.position.copy(startCamera.position).lerp(endCamera.position, _t);
+      interpolatedCamera.quaternion.copy(startCamera.quaternion).slerp(endCamera.quaternion, _t);
+    }
+    
+    return interpolatedCamera;
+  }
+
+  function interpolateCameras(cameras, M) {
+    const interpolatedCameras = [];
+    
+    if (cameras.length === 0) {
+      return interpolatedCameras;
+    }
+    
+    if (cameras.length === 1) {
+      // 如果只有一个相机，重复使用它
+      for (let i = 0; i < M; i++) {
+        interpolatedCameras.push(cameras[0]);
+      }
+      return interpolatedCameras;
+    }
+    
+    for (let i = 0; i < M; i++) {
+      const t = i / (M - 1);
+      const startIndex = Math.min(Math.floor(t * (cameras.length - 1)), cameras.length - 2);
+      const endIndex = startIndex + 1;
+      const startCamera = cameras[startIndex];
+      const endCamera = cameras[endIndex];
+      const _t = t * (cameras.length - 1) - startIndex;
+      const interpolatedCamera = interpolateTwoCameras(startCamera, endCamera, _t);
+      interpolatedCameras.push(interpolatedCamera);
+    }
+    return interpolatedCameras;
+  }
+
+  // 创建立方体的splat可视化
+  function createCubeSplat(size = 0.1, pointColor = [1, 1, 1]) {
+    const cubeSplat = new SplatMesh({
+      constructSplats: (splats) => {
+        const NUM_SPLATS_PER_EDGE = 1000;
+        const scales = new THREE.Vector3().setScalar(0.002);
+        const quaternion = new THREE.Quaternion();
+        const opacity = 1;
+        const color = new THREE.Color(...pointColor);
+
+        // 立方体的8个顶点
+        const halfSize = size / 2;
+        const vertices = [
+          new THREE.Vector3(-halfSize, -halfSize, -halfSize), // 0: 左下后
+          new THREE.Vector3(halfSize, -halfSize, -halfSize),  // 1: 右下后
+          new THREE.Vector3(halfSize, halfSize, -halfSize),   // 2: 右上后
+          new THREE.Vector3(-halfSize, halfSize, -halfSize),  // 3: 左上后
+          new THREE.Vector3(-halfSize, -halfSize, halfSize),  // 4: 左下前
+          new THREE.Vector3(halfSize, -halfSize, halfSize),   // 5: 右下前
+          new THREE.Vector3(halfSize, halfSize, halfSize),    // 6: 右上前
+          new THREE.Vector3(-halfSize, halfSize, halfSize), // 7: 左上前
+        ];
+
+        // 立方体的12条边
+        const edges = [
+          [0, 1], [1, 2], [2, 3], [3, 0], // 后面4条边
+          [4, 5], [5, 6], [6, 7], [7, 4], // 前面4条边
+          [0, 4], [1, 5], [2, 6], [3, 7], // 连接前后4条边
+        ];
+
+        // 为每条边生成splat点
+        for (let i = 0; i < edges.length; i++) {
+          const start = vertices[edges[i][0]];
+          const end = vertices[edges[i][1]];
+          for (let j = 0; j < NUM_SPLATS_PER_EDGE; j++) {
+            const point = new THREE.Vector3().lerpVectors(start, end, j / NUM_SPLATS_PER_EDGE);
+            splats.pushSplat(point, scales, quaternion, opacity, color);
+          }
+        }
+      },
+    });
+    return cubeSplat;
+  }
+
+  // 创建相机锥体的splat可视化
+  function createCameraSplat(camera, pointColor = [1, 1, 1]) {
+    const cameraSplat = new SplatMesh({
+      constructSplats: (splats) => {
+        const NUM_SPLATS_PER_EDGE = 1000;
+        const LENGTH_PER_EDGE = 0.1;
+        const center = new THREE.Vector3();
+        const scales = new THREE.Vector3().setScalar(0.001);
+        const quaternion = new THREE.Quaternion();
+        const opacity = 1;
+        const color = new THREE.Color(...pointColor);
+
+        const H = 1000;
+        const W = 1000 * camera.aspect;
+        const fx = 0.5 * H / Math.tan(0.5 * camera.fov * Math.PI / 180);
+        const fy = 0.5 * H / Math.tan(0.5 * camera.fov * Math.PI / 180);
+
+        const xt = (0 - W / 2 + 0.5) / fy;
+        const xb = (W - W / 2 + 0.5) / fy;
+        const yl = - (0 - H / 2 + 0.5) / fx;
+        const yr = - (H - H / 2 + 0.5) / fx;
+
+        const lt = new THREE.Vector3(xt * LENGTH_PER_EDGE, yl * LENGTH_PER_EDGE, -1 * LENGTH_PER_EDGE);
+        const rt = new THREE.Vector3(xt * LENGTH_PER_EDGE, yr * LENGTH_PER_EDGE, -1 * LENGTH_PER_EDGE);
+        const lb = new THREE.Vector3(xb * LENGTH_PER_EDGE, yl * LENGTH_PER_EDGE, -1 * LENGTH_PER_EDGE);
+        const rb = new THREE.Vector3(xb * LENGTH_PER_EDGE, yr * LENGTH_PER_EDGE, -1 * LENGTH_PER_EDGE);
+
+        const lines = [
+          [center, lt], [center, rt], [center, lb], [center, rb],
+          [lt, rt], [lt, lb], [rt, rb], [lb, rb],
+        ];
+
+        for (let i = 0; i < lines.length; i++) {
+          for (let j = 0; j < NUM_SPLATS_PER_EDGE; j++) {
+            const point = new THREE.Vector3().lerpVectors(lines[i][0], lines[i][1], j / NUM_SPLATS_PER_EDGE);
+            splats.pushSplat(point, scales, quaternion, opacity, color);
+          }
+        }
+      },
+    });
+    cameraSplat.quaternion.copy(camera.quaternion);
+    cameraSplat.position.copy(camera.position);
+    return cameraSplat;
+  }
+
+  // 生成相机轨迹模板
+  function generateCameraTrajectory(trajectoryType) {
+    if (trajectoryType === "Manual") {
+      updateStatus('Manual mode: Use Space to record cameras manually', cameraParams.length);
+      return;
+    }
+
+    // 检查FOV是否已固定
+    if (!fixGenerationFOV) {
+      updateStatus('Error: Please fix FOV first before generating trajectory', cameraParams.length);
+      return;
+    }
+
+    // 获取最后一个相机作为参考点
+    let referenceCamera;
+    if (cameraParams.length > 0) {
+      // 使用最后一个已保存的相机作为参考
+      const lastCamera = cameraParams[cameraParams.length - 1];
+      referenceCamera = new THREE.PerspectiveCamera(guiOptions.FOV, camera.aspect);
+      referenceCamera.position.copy(lastCamera.position);
+      referenceCamera.quaternion.copy(lastCamera.quaternion);
+      referenceCamera.updateProjectionMatrix();
+    } else {
+      // 如果没有已保存的相机，从原点开始
+      referenceCamera = new THREE.PerspectiveCamera(guiOptions.FOV, camera.aspect);
+      referenceCamera.position.set(0, 0, 0);
+      referenceCamera.quaternion.set(0, 0, 0, 1);
+      referenceCamera.updateProjectionMatrix();
+    }
+
+    // 对于orbit，计算所有相机围绕的目标点
+    // 始终使用当前参考相机（最后一个相机）来计算目标点
+    let orbitTarget = null;
+    let orbitStartCamera = null;
+    if (trajectoryType.includes("Orbit") && cameraParams.length > 0) {
+      // 使用最后一个相机作为参考，计算其前方1单位的目标点
+      orbitStartCamera = cameraParams[cameraParams.length - 1];
+      orbitTarget = orbitStartCamera.position.clone().add(
+        new THREE.Vector3(0, 0, -1).applyQuaternion(orbitStartCamera.quaternion)
+      );
+      console.log("Orbit target calculated from last camera:", orbitStartCamera.position, "->", orbitTarget);
+    } else if (trajectoryType.includes("Orbit")) {
+      // 如果没有已记录的相机，使用当前相机作为参考
+      orbitStartCamera = referenceCamera;
+      orbitTarget = referenceCamera.position.clone().add(
+        new THREE.Vector3(0, 0, -1).applyQuaternion(referenceCamera.quaternion)
+      );
+      console.log("Orbit target calculated from current camera:", referenceCamera.position, "->", orbitTarget);
+    }
+
+    const cameras = [];
+    const stepSize = 0.5; // 移动步长
+    const totalOrbitAngle = 15 * Math.PI / 180; // 总共15度轨道
+
+    // 根据轨迹类型生成相机
+    let numCameras = 1; // 默认生成1个相机
+    if (trajectoryType.includes("Orbit")) {
+      numCameras = 1; // 轨道运动生成1个相机
+      console.log(`Generating ${numCameras} orbit camera with total angle ${totalOrbitAngle * 180 / Math.PI}°`);
+    }
+
+    for (let i = 1; i <= numCameras; i++) {
+      const newCamera = new THREE.PerspectiveCamera(guiOptions.FOV, camera.aspect);
+      let position, quaternion;
+      
+      switch (trajectoryType) {
+        case "Move Forward":
+          position = referenceCamera.position.clone();
+          position.z -= stepSize;
+          quaternion = referenceCamera.quaternion.clone();
+          break;
+          
+        case "Move Backward":
+          position = referenceCamera.position.clone();
+          position.z += stepSize;
+          quaternion = referenceCamera.quaternion.clone();
+          break;
+          
+        case "Move Left":
+          position = referenceCamera.position.clone();
+          position.x -= stepSize;
+          quaternion = referenceCamera.quaternion.clone();
+          break;
+          
+        case "Move Right":
+          position = referenceCamera.position.clone();
+          position.x += stepSize;
+          quaternion = referenceCamera.quaternion.clone();
+          break;
+          
+        case "Orbit Left 15°":
+          const radius = 1.0;
+          // 左轨道：-15度
+          const angle = -totalOrbitAngle;
+          
+          console.log(`Camera ${i}: angle=${angle * 180 / Math.PI}° (Left)`);
+          
+          // 计算轨道位置：在参考相机的局部坐标系中
+          const localOrbitPos = new THREE.Vector3(
+            Math.sin(angle) * radius,
+            0,
+            Math.cos(angle) * radius
+          );
+          
+          // 转换到世界坐标系：旋转到参考相机的方向
+          const worldOrbitPos = localOrbitPos.applyQuaternion(orbitStartCamera.quaternion);
+          
+          // 最终位置：从目标点出发，加上世界坐标系中的偏移
+          position = orbitTarget.clone().add(worldOrbitPos);
+          
+          console.log(`Orbit Left camera ${i}: localPos=`, localOrbitPos, 'worldPos=', worldOrbitPos, 'finalPos=', position);
+          
+          // 朝向：所有相机都朝向圆心（目标点）
+          const lookDirection = orbitTarget.clone().sub(position).normalize();
+          quaternion = new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(0, 0, -1), 
+            lookDirection
+          );
+          
+          console.log(`Orbit Left camera ${i}: quaternion=`, quaternion);
+          break;
+          
+        case "Orbit Right 15°":
+          const radiusRight = 1.0;
+          // 右轨道：+15度
+          const angleRight = totalOrbitAngle;
+          
+          console.log(`Camera ${i}: angle=${angleRight * 180 / Math.PI}° (Right)`);
+          
+          // 计算轨道位置：在参考相机的局部坐标系中
+          const localOrbitPosRight = new THREE.Vector3(
+            Math.sin(angleRight) * radiusRight,
+            0,
+            Math.cos(angleRight) * radiusRight
+          );
+          
+          // 转换到世界坐标系：旋转到参考相机的方向
+          const worldOrbitPosRight = localOrbitPosRight.applyQuaternion(orbitStartCamera.quaternion);
+          
+          // 最终位置：从目标点出发，加上世界坐标系中的偏移
+          position = orbitTarget.clone().add(worldOrbitPosRight);
+          
+          console.log(`Orbit Right camera ${i}: localPos=`, localOrbitPosRight, 'worldPos=', worldOrbitPosRight, 'finalPos=', position);
+          
+          // 朝向：所有相机都朝向圆心（目标点）
+          const lookDirectionRight = orbitTarget.clone().sub(position).normalize();
+          quaternion = new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(0, 0, -1), 
+            lookDirectionRight
+          );
+          
+          console.log(`Orbit Right camera ${i}: quaternion=`, quaternion);
+          break;
+          
+          
+        default:
+          position = referenceCamera.position.clone();
+          quaternion = referenceCamera.quaternion.clone();
+      }
+
+      newCamera.position.copy(position);
+      newCamera.quaternion.copy(quaternion);
+      newCamera.updateProjectionMatrix();
+      cameras.push(newCamera);
+    }
+
+    // 添加相机到场景
+    cameras.forEach(cam => {
+      const cameraSplat = createCameraSplat(cam);
+      cameraSplats.push(cameraSplat);
+      cameraParams.push({
+        position: cam.position.clone(),
+        quaternion: cam.quaternion.clone(),
+        fov: cam.fov,
+        aspect: cam.aspect,
+      });
+      scene.add(cameraSplat);
+    });
+
+    updateStatus(`Added ${cameras.length} cameras using ${trajectoryType} trajectory`, cameraParams.length);
+    console.log(`Added ${cameras.length} cameras using ${trajectoryType} trajectory`);
+  }
+
+  // =========================
+  // GUI & User Interaction
+  // =========================
+
+  // GUI 控件 - 延迟初始化
+  function initializeGUI() {
+    const guiContainer = document.getElementById('gui-container');
+    if (guiContainer && !gui) {
+      // Clear any existing content
+      guiContainer.innerHTML = '';
+      
+      gui = new GUI({ title: "FlashWorld Controls", container: guiContainer });
+      console.log('GUI initialized in container:', guiContainer);
+      
+      // Step 1: Configure Generation Settings
+      const step1Folder = gui.addFolder('1. Configure Settings');
+      step1Folder.add(guiOptions, "BackendAddress").name("Backend Address");
+      
+      // FOV和Resolution控制器，初始时启用
+      const fovController = step1Folder.add(guiOptions, "FOV", 0, 120, 1).name("FOV").onChange((value) => {
+        camera.fov = value;
+        camera.updateProjectionMatrix();
+      });
+      const resolutionController = step1Folder.add(guiOptions, "Resolution", supportedResolutions.map(
+        r => `${r.frame}x${r.height}x${r.width}`
+      )).name("Resolution (NxHxW)").onChange((value) => {
+        updateCanvasSize();
+      });
+      
+      // Fix Configuration按钮放在最下面
+      const fixGenerationFOVController = step1Folder.add(guiOptions, "fixGenerationFOV").name("Fix Configuration");
+      step1Folder.open();
+
+      // Step 2: Set Up Camera Path
+      const step2Folder = gui.addFolder('2. Set Up Camera Path');
+      
+      // Camera trajectory templates
+      const trajectoryFolder = step2Folder.addFolder('Camera Trajectory');
+      
+      // 轨迹模式选择
+      const trajectoryModeController = trajectoryFolder.add(guiOptions, "trajectoryMode", [
+        "Manual",
+        "Template", 
+        "JSON"
+      ]).name("Trajectory Mode");
+      
+      // 模板类型选择（仅在Template模式下可用）
+      const templateTypeController = trajectoryFolder.add(guiOptions, "templateType", [
+        "Move Forward",
+        "Move Backward", 
+        "Move Left",
+        "Move Right",
+        "Orbit Left 15°",
+        "Orbit Right 15°"
+      ]).name("Template Type");
+      
+      // 生成轨迹按钮
+      const generateTrajectoryController = trajectoryFolder.add(guiOptions, "generateTrajectory").name("Generate Trajectory");
+      
+      // 加载/保存JSON轨迹按钮
+      const loadTrajectoryController = trajectoryFolder.add(guiOptions, "LoadTrajectoryFromJson").name("Load from JSON");
+      const saveTrajectoryController = trajectoryFolder.add(guiOptions, "saveTrajectoryToJson").name("Save Trajectory");
+      
+      // 清理相机按钮
+      const clearAllCamerasController = trajectoryFolder.add(guiOptions, "clearAllCameras").name("Clear All Cameras");
+      
+      // 初始状态：禁用所有轨迹相关控件
+      templateTypeController.disable();
+      generateTrajectoryController.disable();
+      loadTrajectoryController.disable();
+      
+      // 轨迹模式变化时的处理
+      trajectoryModeController.onChange((value) => {
+        if (value === "Manual") {
+          templateTypeController.disable();
+          generateTrajectoryController.disable();
+          loadTrajectoryController.disable();
+        } else if (value === "Template") {
+          templateTypeController.enable();
+          if (fixGenerationFOV) {
+            generateTrajectoryController.enable();
+          } else {
+            generateTrajectoryController.disable();
+          }
+          loadTrajectoryController.disable();
+        } else if (value === "JSON") {
+          templateTypeController.disable();
+          generateTrajectoryController.disable();
+          if (fixGenerationFOV) {
+            loadTrajectoryController.enable();
+          } else {
+            loadTrajectoryController.disable();
+          }
+        }
+      });
+      
+      // 当Configuration固定时启用轨迹生成
+      const originalFixFOV = guiOptions.fixGenerationFOV;
+      guiOptions.fixGenerationFOV = () => {
+        originalFixFOV();
+        
+        // Fix Configuration后禁用所有Step 1的控制器
+        fovController.disable();
+        resolutionController.disable();
+        
+        // 根据当前轨迹模式启用相应控件
+        if (guiOptions.trajectoryMode === "Template") {
+          generateTrajectoryController.enable();
+        } else if (guiOptions.trajectoryMode === "JSON") {
+          loadTrajectoryController.enable();
+        }
+        updateStatus('Configuration fixed. You can now generate camera trajectory.', cameraParams.length);
+      };
+      
+      trajectoryFolder.open();
+      
+      step2Folder.add(guiOptions, "VisualizeCameraSplats").name("Visualize Cameras").onChange((value) => {
+    cameraSplats.forEach(cameraSplat => {
+      cameraSplat.opacity = value ? 1 : 0;
+    });
+  });
+      step2Folder.add(guiOptions, "VisualizeInterpolatedCameras").name("Visualize Interpolated Cameras").onChange((value) => {
+    interpolatedCamerasSplats.forEach(interpolatedCameraSplat => {
+      interpolatedCameraSplat.opacity = value ? 1 : 0;
+    });
+  });
+
+      // Store controllers globally so they can be accessed from guiOptions
+      window.fixGenerationFOVController = fixGenerationFOVController;
+
+      // Step 3: Add Scene Prompts
+      const step3Folder = gui.addFolder('3. Add Scene Prompts');
+      step3Folder.add(guiOptions, "inputImagePrompt").name("Input Image Prompt");
+      step3Folder.add(guiOptions, "inputTextPrompt").name("Input Text Prompt");
+      step3Folder.add(guiOptions, "imageIndex", 0, 24, 1).name("Image Index");
+      
+
+      // Step 4: Generate Your Scene
+      const step4Folder = gui.addFolder('4. Generate Scene');
+      step4Folder.add(guiOptions, "generate").name("Generate!");
+      step4Folder.open();
+      
+      // Step 5: Trajectory Playback (Scrubber)
+      const step5Folder = gui.addFolder('5. Trajectory Playback');
+      step5Folder.add(guiOptions, 'playbackT', 0, 1, 0.001).name('Scrub (0-1)').onChange((value) => {
+        // 首次拖动时记录用户相机状态，便于需要时恢复（可选）
+        if (!userCameraState) {
+          userCameraState = {
+            position: camera.position.clone(),
+            quaternion: camera.quaternion.clone(),
+            fov: camera.fov
+          };
+        }
+        setCameraByScrub(value);
+        updateStatus(`Scrubbing trajectory: t=${value.toFixed(3)}`, cameraParams.length);
+      });
+      step5Folder.open();
+      
+    }
+  }
+
+
+  // =========================
+  // File Input (Image Prompt)
+  // =========================
+  const fileInput = document.querySelector("#file-input");
+  fileInput.onchange = (event) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        console.log("Loaded image:", file.name, e.target.result);
+
+        // 获取当前Resolution
+        let resolutionStr = guiOptions.Resolution;
+        let [n, h, w] = resolutionStr.split('x').map(Number);
+
+        // 加载图片
+        const img = new Image();
+        img.onload = function() {
+          window.inputImageResolution = { width: img.width, height: img.height };
+          console.log("Input image resolution:", window.inputImageResolution);
+
+          // 计算center crop参数
+          let scaleH = h / img.height;
+          let scaleW = w / img.width;
+          let scale = Math.max(scaleH, scaleW);
+          let newW = Math.round(w / scale);
+          let newH = Math.round(h / scale);
+          let sx = Math.floor((img.width - newW) / 2);
+          let sy = Math.floor((img.height - newH) / 2);
+
+          // 创建canvas进行center crop和resize
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(
+            img,
+            sx, sy, newW, newH, // source crop
+            0, 0, w, h          // destination size
+          );
+          // 得到裁剪+缩放后的base64（用于后端）
+          inputImageBase64 = canvas.toDataURL('image/png');
+          // 更新预览为裁剪后的图
+          const previewArea = document.getElementById('image-preview-area');
+          const previewImg = document.getElementById('preview-img');
+          if (previewImg && previewArea) {
+            previewImg.src = inputImageBase64;
+            previewArea.style.display = 'block';
+          }
+          // 记录传给后端的分辨率（已对齐为当前Resolution）
+          window.inputImageResolution = { width: w, height: h };
+          console.log("Cropped and resized image to:", w, h);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  };
+
+  // =========================
+  // File Input (JSON)
+  // =========================
+  // const jsonInput = document.querySelector("#json-input");
+  // jsonInput.onchange = (event) => {
+  //   const files = event.target.files;
+  //   if (!files || files.length === 0) return;
+  //   const file = files[0];
+  //   const reader = new FileReader();
+  //   reader.onload = function(e) {
+  //     let jsonData;
+  //     try {
+  //       jsonData = JSON.parse(e.target.result);
+  //     } catch (error) {
+  //       alert("JSON parsing error: " + error);
+  //       console.error("JSON parsing error:", error);
+  //       return;
+  //     }
+
+  //     // 清理所有已有的相机和插值相机
+  //     cameraSplats.forEach(splat => scene.remove(splat));
+  //     cameraSplats.length = 0;
+  //     cameraParams.length = 0;
+  //     interpolatedCamerasSplats.forEach(splat => scene.remove(splat));
+  //     interpolatedCamerasSplats.length = 0;
+
+  //     try {
+  //       // 兼容不同命名的字段
+  //       const imagePrompt = jsonData.image_prompt || jsonData.imagePrompt || null;
+  //       const textPrompt = jsonData.text_prompt || jsonData.textPrompt || "";
+  //       const cameras = jsonData.cameras || [];
+  //       const resolution = jsonData.resolution || [16, 480, 640];
+  //       const imageIndex = jsonData.image_index || jsonData.imageIndex || 0;
+
+  //       console.log("Loaded JSON data:", {
+  //         imagePrompt,
+  //         textPrompt,
+  //         cameras: cameras.length,
+  //         resolution,
+  //         imageIndex
+  //       });
+
+  //       // 处理图像提示
+  //       if (imagePrompt) {
+  //         inputImageBase64 = imagePrompt;
+  //         console.log("Image prompt loaded");
+  //       }
+
+  //       // 设置文本提示
+  //       guiOptions.inputTextPrompt = textPrompt;
+  //       guiOptions.imageIndex = imageIndex;
+
+  //       // 处理相机数据
+  //       if (cameras && cameras.length > 0) {
+  //         cameras.forEach(cameraData => {
+  //           // 解析分辨率
+  //           let aspect = 1.0;
+  //           if (Array.isArray(resolution) && resolution.length === 3) {
+  //             aspect = resolution[2] / resolution[1];
+  //           }
+  //           const cam = new THREE.PerspectiveCamera(60, aspect);
+
+  //           // 设置位置
+  //           if (Array.isArray(cameraData.position) && cameraData.position.length === 3) {
+  //             cam.position.set(cameraData.position[0], cameraData.position[1], cameraData.position[2]);
+  //           }
+
+  //           // 设置四元数
+  //           if (Array.isArray(cameraData.quaternion) && cameraData.quaternion.length === 4) {
+  //             // 注意：three.js的顺序是 (x, y, z, w)
+  //             cam.quaternion.set(
+  //               cameraData.quaternion[1],
+  //               cameraData.quaternion[2],
+  //               cameraData.quaternion[3],
+  //               cameraData.quaternion[0]
+  //             );
+  //           }
+
+  //           // 设置FOV和焦距
+  //           if (cameraData.fx && cameraData.fy) {
+  //             // fx, fy: 焦距（像素）
+  //             // 假设分辨率为 [N, H, W]
+  //             // fov = 2 * atan(0.5 * H / fy) * 180 / PI
+  //             // 但原代码用的是 fx
+  //             let fov = 60;
+  //             if (cameraData.fx) {
+  //               fov = 2 * Math.atan(0.5 / cameraData.fx) * 180 / Math.PI;
+  //             }
+  //             cam.fov = fov;
+  //             cam.aspect = cameraData.fx / cameraData.fy;
+  //             cam.updateProjectionMatrix();
+  //           }
+
+  //           const cameraSplat = createCameraSplat(cam);
+  //           cameraSplats.push(cameraSplat);
+  //           cameraParams.push({
+  //             position: cam.position.clone(),
+  //             quaternion: cam.quaternion.clone(),
+  //             fov: cam.fov,
+  //             aspect: cam.aspect,
+  //           });
+  //           scene.add(cameraSplat);
+  //         });
+  //         console.log(`Loaded ${cameras.length} cameras`);
+  //       }
+
+  //       // 设置分辨率
+  //       if (Array.isArray(resolution) && resolution.length === 3) {
+  //         guiOptions.Resolution = `${resolution[0]}x${resolution[1]}x${resolution[2]}`;
+  //       }
+
+  //       alert("JSON loaded");
+  //     } catch (error) {
+  //       alert("JSON data processing error: " + error);
+  //       console.error("JSON data processing error:", error);
+  //     }
+  //   };
+  //   reader.readAsText(file);
+  // };
+
+  const jsonInput = document.querySelector("#json-input");
+  jsonInput.onchange = (event) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      let jsonData;
+      try {
+        jsonData = JSON.parse(e.target.result);
+      } catch (error) {
+        console.error("JSON parsing error:", error);
+        return;
+      }
+
+      // 检查是否是只加载轨迹
+      const loadTrajectoryOnly = window.loadTrajectoryOnly;
+      window.loadTrajectoryOnly = false; // 重置标志
+
+      if (loadTrajectoryOnly) {
+        // 只加载轨迹：清理所有已有的相机和插值相机
+        cameraSplats.forEach(splat => scene.remove(splat));
+        cameraSplats.length = 0;
+        cameraParams.length = 0;
+        interpolatedCamerasSplats.forEach(splat => scene.remove(splat));
+        interpolatedCamerasSplats.length = 0;
+      } else {
+        // 加载完整JSON：清理所有已有的相机和插值相机
+        cameraSplats.forEach(splat => scene.remove(splat));
+        cameraSplats.length = 0;
+        cameraParams.length = 0;
+        interpolatedCamerasSplats.forEach(splat => scene.remove(splat));
+        interpolatedCamerasSplats.length = 0;
+      }
+
+      try {
+        // 兼容不同命名的字段
+        const imagePrompt = jsonData.image_prompt || jsonData.imagePrompt || null;
+        const textPrompt = jsonData.text_prompt || jsonData.textPrompt || "";
+        const cameras = jsonData.cameras || [];
+        const resolution = jsonData.resolution || [16, 480, 640];
+        const imageIndex = jsonData.image_index || jsonData.imageIndex || 0;
+
+        console.log("Loaded JSON data:", {
+          imagePrompt,
+          textPrompt,
+          cameras: cameras.length,
+          resolution,
+          imageIndex
+        });
+
+        // 处理图像提示（仅在非轨迹加载模式下）
+        if (!loadTrajectoryOnly && imagePrompt) {
+          inputImageBase64 = imagePrompt;
+          console.log("Image prompt loaded");
+        }
+
+        // 设置文本提示（仅在非轨迹加载模式下）
+        if (!loadTrajectoryOnly) {
+          guiOptions.inputTextPrompt = textPrompt;
+          guiOptions.imageIndex = imageIndex;
+        }
+
+        // 处理相机数据
+        if (cameras && cameras.length > 0) {
+          let jsonFirstCamera = null;
+          let jsonFirstPosition = null;
+          let jsonFirstQuaternion = null;
+          
+          // 首先获取JSON中第一个相机的位置和四元数
+          if (loadTrajectoryOnly && cameras.length > 0) {
+            const firstCameraData = cameras[0];
+            if (Array.isArray(firstCameraData.position) && firstCameraData.position.length === 3) {
+              jsonFirstPosition = new THREE.Vector3(
+                firstCameraData.position[0],
+                firstCameraData.position[1],
+                firstCameraData.position[2]
+              );
+            }
+            if (Array.isArray(firstCameraData.quaternion) && firstCameraData.quaternion.length === 4) {
+              jsonFirstQuaternion = new THREE.Quaternion(
+                firstCameraData.quaternion[1],
+                firstCameraData.quaternion[2],
+                firstCameraData.quaternion[3],
+                firstCameraData.quaternion[0]
+              );
+            }
+          }
+          
+          cameras.forEach((cameraData, index) => {
+            // 解析分辨率
+            let aspect = 1.0;
+            if (Array.isArray(resolution) && resolution.length === 3) {
+              aspect = resolution[2] / resolution[1];
+            } else {
+              aspect = guiOptions.Resolution.split('x')[2] / guiOptions.Resolution.split('x')[1];
+            }
+            
+            // 根据加载模式决定FOV
+            let fov = 60;
+            if (loadTrajectoryOnly) {
+              // 轨迹加载：使用GUI中设定的FOV
+              fov = guiOptions.FOV;
+            } else {
+              // 完整JSON加载：使用JSON中的FOV或默认值
+              if (cameraData.fx && cameraData.fy) {
+                fov = 2 * Math.atan(0.5 / cameraData.fx) * 180 / Math.PI;
+              }
+            }
+            
+            const cam = new THREE.PerspectiveCamera(fov, aspect);
+
+            // 设置位置和四元数
+            if (Array.isArray(cameraData.position) && cameraData.position.length === 3) {
+              cam.position.set(cameraData.position[0], cameraData.position[1], cameraData.position[2]);
+            }
+
+            if (Array.isArray(cameraData.quaternion) && cameraData.quaternion.length === 4) {
+              // 注意：three.js的顺序是 (x, y, z, w)
+              cam.quaternion.set(
+                cameraData.quaternion[1],
+                cameraData.quaternion[2],
+                cameraData.quaternion[3],
+                cameraData.quaternion[0]
+              );
+            }
+            
+            // 轨迹加载：第一个相机强制设置为原点
+            // if (loadTrajectoryOnly && index === 0) {
+            //   cam.position.set(0, 0, 0);
+            //   cam.quaternion.set(0, 0, 0, 1);
+            // }
+
+            // 轨迹加载：归一化到相对于固定FOV相机的位置
+            if (loadTrajectoryOnly && jsonFirstPosition && jsonFirstQuaternion) {
+              // 参考Python代码的归一化逻辑
+              // 1. 计算JSON第一个相机的c2w矩阵
+              const jsonFirstC2W = new THREE.Matrix4();
+              jsonFirstC2W.compose(jsonFirstPosition, jsonFirstQuaternion, new THREE.Vector3(1, 1, 1));
+              
+              // 2. 计算当前相机的c2w矩阵
+              const currentC2W = new THREE.Matrix4();
+              currentC2W.compose(cam.position, cam.quaternion, new THREE.Vector3(1, 1, 1));
+              
+              // 3. 计算相对变换：ref_w2c @ current_c2w
+              const refW2C = jsonFirstC2W.clone().invert();
+              const relativeTransform = refW2C.clone().multiply(currentC2W);
+              
+              // 4. 将相对变换应用到原点相机上（作为参考）
+              const fixedC2W = new THREE.Matrix4();
+              fixedC2W.compose(new THREE.Vector3(0, 0, 0), new THREE.Quaternion(0, 0, 0, 1), new THREE.Vector3(1, 1, 1));
+              
+              const newTransform = fixedC2W.clone().multiply(relativeTransform);
+              
+              // 5. 提取新的位置和旋转
+              const newPosition = new THREE.Vector3();
+              const newQuaternion = new THREE.Quaternion();
+              const newScale = new THREE.Vector3();
+              newTransform.decompose(newPosition, newQuaternion, newScale);
+              
+              cam.position.copy(newPosition);
+              cam.quaternion.copy(newQuaternion);
+            }
+
+            // 设置FOV和焦距（仅在非轨迹加载模式下）
+            if (!loadTrajectoryOnly && cameraData.fx && cameraData.fy) {
+              cam.fov = fov;
+              cam.aspect = cameraData.fx / cameraData.fy;
+              cam.updateProjectionMatrix();
+            } else if (loadTrajectoryOnly) {
+              // 轨迹加载：使用GUI中设定的FOV和aspect
+              cam.fov = fov;
+              cam.aspect = aspect;
+              cam.updateProjectionMatrix();
+            }
+
+            const cameraSplat = createCameraSplat(cam);
+            cameraSplats.push(cameraSplat);
+            cameraParams.push({
+              position: cam.position.clone(),
+              quaternion: cam.quaternion.clone(),
+              fov: cam.fov,
+              aspect: cam.aspect,
+            });
+            scene.add(cameraSplat);
+          });
+          
+          console.log(cameraParams);
+        }
+
+        // 设置分辨率（仅在非轨迹加载模式下）
+        if (!loadTrajectoryOnly && Array.isArray(resolution) && resolution.length === 3) {
+          guiOptions.Resolution = `${resolution[0]}x${resolution[1]}x${resolution[2]}`;
+        }
+
+        // 显示成功消息
+        if (loadTrajectoryOnly) {
+          updateStatus(`Trajectory loaded: ${cameras.length} cameras`, cameraParams.length);
+        } else {
+        }
+      } catch (error) {
+        console.error("JSON data processing error:", error);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // =========================
+  // Keyboard Controls
+  // =========================
+  document.addEventListener('keypress', (event) => {
+    if (event.code === 'Space') {
+      if (!fixGenerationFOV) {
+        updateStatus('Please fix Generation FOV first', cameraParams.length);
+        return;
+      }
+      // 记录当前相机的pose
+      const new_camera = camera.clone();
+      new_camera.fov = guiOptions.FOV;
+      new_camera.aspect = guiOptions.Resolution.split('x')[2] / guiOptions.Resolution.split('x')[1];
+      new_camera.updateProjectionMatrix();
+
+      const cameraSplat = createCameraSplat(new_camera);
+      cameraSplats.push(cameraSplat);
+      cameraParams.push({
+        position: new_camera.position.clone(),
+        quaternion: new_camera.quaternion.clone(),
+        fov: new_camera.fov,
+        aspect: new_camera.aspect,
+      });
+      scene.add(cameraSplat);
+      
+      updateStatus(`Camera ${cameraParams.length} recorded. Press Space for more or Generate!`, cameraParams.length);
+
+      console.log(new_camera.getFocalLength());
+    }
+  });
+
+  // =========================
+  // Scene Initialization
+  // =========================
+
+  // Initialize status
+  updateStatus('FlashWorld initialized. Configure settings to begin.', 0);
+  
+  // Add cube splat to the scene
+  let instructionSplat = createCubeSplat(0.25, [1, 1, 1]);
+  instructionSplat.position.set(0, 0, -1);
+  scene.add(instructionSplat);
+  console.log('Cube splat added to scene');
+  
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    console.log('Window resized, updating canvas...');
+    // Update canvas size based on current resolution
+    updateCanvasSize();
+  });
+
+  // =========================
+  // Animation Loop
+  // =========================
+  let lastTime = null;
+  
+  renderer.setAnimationLoop(function animate(time) {
+    const deltaTime = time - (lastTime || time);
+      lastTime = time;
+    
+    // Rotate the cube splat
+    if (instructionSplat) {
+      // instructionSplat.rotation.x += deltaTime / 4000; // 绕X轴旋转
+      instructionSplat.rotation.y += deltaTime / 5000; // 绕Y轴旋转
+      instructionSplat.rotation.z += deltaTime / 6000; // 绕Z轴旋转
+    }
+
+    // No active playback loop; scrubber directly sets camera
+
+    controls.update(camera);
+    renderer.render(scene, camera);
+
+  });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+tmpfiles/
+model.ckpt
+
+**/__pycache__/**

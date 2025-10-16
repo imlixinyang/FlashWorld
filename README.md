@@ -38,6 +38,8 @@ pip install torch torchvision
 pip install triton transformers pytorch_lightning omegaconf ninja numpy jaxtyping rich tensorboard einops moviepy==1.0.3 webdataset accelerate opencv-python lpips av plyfile ftfy peft tensorboard pandas flask
 ```
 
+Please refer to the `requirements.txt` file for the exact package versions.
+
 - install ```gsplat@1.5.2``` and ```diffusers@wan-5Bi2v``` packages
 ```
 pip install git+https://github.com/nerfstudio-project/gsplat.git@32f2a54d21c7ecb135320bb02b136b7407ae5712
@@ -55,9 +57,10 @@ cd FlashWorld
 python app.py
 ```
 
-Then, enjoy your journey in FlashWorld!
-  
+Then, open your web browser and navigate to ```http://HOST_IP:7860``` to start exploring FlashWorld!
 
+<!-- We also provide example trajectory josn files and input images in the `examples/` directory. -->
+  
 ## More Generation Results
 
 [https://github.com/user-attachments/assets/bbdbe5de-5e15-4471-b380-4d8191688d82](https://github.com/user-attachments/assets/53d41748-4c35-48c4-9771-f458421c0b38)
@@ -66,7 +69,6 @@ Then, enjoy your journey in FlashWorld!
 ## License
 
 Licensed under the CC BY-NC-SA 4.0 (Attribution-NonCommercial-ShareAlike 4.0 International)
-
 
 The code is released for academic research use only. 
 
