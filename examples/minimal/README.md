@@ -63,7 +63,7 @@ By default, frame count is capped at 16 to save memory. Use this flag to use the
 
 The trajectory JSON file defines the camera path and resolution:
 
-```json
+```
 {
   "resolution": [n_frames, height, width],
   "cameras": [
@@ -188,6 +188,18 @@ optional arguments:
   --fewer-steps        Use 2 denoising steps instead of 4 (faster, less quality)
 ```
 
+## What you get running the tests
+This is an example of memory usage when I ran `test_generate_minimal.py` with an image prompt:
+
+```
+python examples/minimal/test_generate_minimal.py --trajectory examples/minimal/demo_trajectory.json --image examples/minimal/image.png --text "a university courtyard" --image_index 0 --output courtyard.ply
+```
+#### cmd output showing VRAM usage:
+![cmd output showing VRAM usage](example_cmd_output01.png)
+
+#### The output from 3 cameras and only 16 steps (shown in supersplat):
+![The output from 3 cameras and only 16 steps](example_ply01.jpg)
+
 ## Contributing
 
-If you create useful trajectory templates or find optimal settings for specific hardware, please consider contributing them back to this directory!
+If you create useful trajectory templates or find optimal settings for specific hardware, please consider contributing them back to this directory or ping [@docherty](https://github.com/docherty) and I'll update it.
