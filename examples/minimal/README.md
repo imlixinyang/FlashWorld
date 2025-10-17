@@ -86,12 +86,12 @@ The trajectory JSON file defines the camera path and resolution:
 
 ## Memory Requirements
 
-| Configuration | Estimated VRAM | Speed | Quality |
-|--------------|----------------|-------|---------|
-| Default (all optimizations) | ~18-20GB | Medium | Good |
-| `--fewer-steps` | ~15-18GB | Fast | Acceptable |
-| Low-res + `--fewer-steps` | ~12-15GB | Fast | Lower |
-| No offloading | ~24GB+ | Fastest | Best |
+Configuration | Estimated VRAM | Speed | Quality
+--------------|----------------|-------|---------
+Default (all optimizations) | ~18-20GB | Medium | Good
+`--fewer-steps` | ~15-18GB | Fast | Acceptable
+Low-res + `--fewer-steps` | ~12-15GB | Fast | Lower
+No offloading | ~24GB+ | Fastest | Best
 
 ## Troubleshooting
 
