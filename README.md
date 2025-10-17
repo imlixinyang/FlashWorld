@@ -67,6 +67,19 @@ Then, open your web browser and navigate to ```http://HOST_IP:7860``` to start e
 
 [https://github.com/user-attachments/assets/bbdbe5de-5e15-4471-b380-4d8191688d82](https://github.com/user-attachments/assets/53d41748-4c35-48c4-9771-f458421c0b38)
 
+## Citation
+
+```
+@misc{li2025flashworld,
+        title={FlashWorld: High-quality 3D Scene Generation within Seconds},
+        author={Xinyang Li and Tengfei Wang and Zixiao Gu and Shengchuan Zhang and Chunchao Guo and Liujuan Cao},
+        year={2025},
+        eprint={2510.13678},
+        archivePrefix={arXiv},
+        primaryClass={cs.CV}
+    }
+```
+
 
 ## License
 
