@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Low memory FlashWorld generation test script
-Usage: python test_generate_lowmem.py --trajectory cameras.json --text "a beautiful landscape" --output output.ply
+Usage: python test_generate_minimal.py --trajectory cameras.json --text "a beautiful landscape" --output output.ply
 """
 
 import os
