@@ -95,9 +95,10 @@ class ConcurrencyManager:
                 self.completed_tasks[task.task_id] = task
                 if task.task_id in self.running_tasks:
                     del self.running_tasks[task.task_id]
-                    
+            print(f"Task {task.task_id} completed")
         except Exception as e:
             # 标记失败
+            print(f"Task {task.task_id} failed: {e}")
             with self.lock:
                 task.status = TaskStatus.FAILED
                 task.completed_at = time.time()
