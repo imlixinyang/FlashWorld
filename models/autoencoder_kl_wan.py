@@ -262,7 +262,7 @@ class WanRMS_norm(nn.Module):
         self.bias = nn.Parameter(torch.zeros(shape)) if bias else 0.0
 
     def forward(self, x):
-        return F.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma + self.bias
+        return F.normalize(x, dim=(1 if self.channel_first else -1)).mul_(self.scale * self.gamma).add_(self.bias)
 
 
 class WanUpsample(nn.Upsample):

@@ -214,13 +214,13 @@ class PixelAligned3DGS(nn.Module):
 
     @torch.amp.autocast(device_type='cuda', enabled=False)
     def forward(self, x, cameras):
-        
-        x = x.to(torch.float32)
-        cameras = cameras.to(torch.float32)
 
         BN, _, h, w = x.shape
 
-        local_gaussian_params = F.conv2d(x, self.gs_proj.weight * self.lrs_mul[:, None, None, None], self.gs_proj.bias * self.lrs_mul, stride=1, padding=1).unflatten(1, (self.num_points_per_pixel, -1))
+        local_gaussian_params = F.conv2d(x, self.gs_proj.weight * self.lrs_mul[:, None, None, None].to(x.dtype), self.gs_proj.bias * self.lrs_mul.to(x.dtype), stride=1, padding=1).unflatten(1, (self.num_points_per_pixel, -1))
+
+        local_gaussian_params = local_gaussian_params.to(torch.float32)
+        cameras = cameras.to(torch.float32)
         # local_gaussian_params = F.conv2d(x, self.gs_proj.weight, self.gs_proj.bias, stride=1, padding=1).unflatten(1, (self.num_points_per_pixel, -1))
 
         # batch * n_frame, num_points_per_pixel, c, h, w -> batch * n_frame, num_points_per_pixel, h, w, c

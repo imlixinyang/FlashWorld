@@ -67,7 +67,8 @@
         .content-container {
             display: flex;
             flex: 1;
-            overflow: hidden;
+            overflow: visible; /* Allow tooltips to extend beyond container */
+            min-height: 0; /* allow children to shrink and scroll inside */
         }
         
         .left-panel {
@@ -76,7 +77,10 @@
             border-right: 1px solid rgba(255, 255, 255, 0.1);
             padding: 20px;
             overflow-y: auto;
+            overflow-x: visible; /* Allow tooltips to extend beyond panel */
             flex-shrink: 0;
+            min-height: 0; /* ensure scrollable in flex layouts */
+            -webkit-overflow-scrolling: touch; /* smoother scrolling on iOS */
         }
         
         .center-panel {
@@ -86,6 +90,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            z-index: 1; /* Lower z-index to allow tooltips to appear above */
         }
         
         .right-panel {
@@ -95,6 +100,7 @@
             padding: 20px;
             overflow-y: auto;
             flex-shrink: 0;
+            z-index: 1; /* Lower z-index to allow tooltips to appear above */
         }
         
         .guidance {
@@ -222,6 +228,7 @@
             font-size: 12px;
             cursor: default;
             user-select: none;
+            z-index: 100000; /* Ensure the tip itself is above everything */
         }
         .info-tip .tooltip {
             display: none;
@@ -229,16 +236,17 @@
             left: 0;
             top: calc(100% + 8px); /* show below the icon */
             transform: none;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             color: #e5e7eb;
-            border: 1px solid rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
             border-radius: 8px;
             padding: 10px 12px;
             font-size: 12px;
-            width: 360px; /* wider tooltip */
+            width: 480px;
             white-space: normal;
-            z-index: 2000; /* above GUI and other elements */
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            z-index: 999999; /* Even higher z-index to ensure it's above everything */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            text-align: left;
         }
         .info-tip:hover .tooltip {
             display: block;
@@ -399,6 +407,52 @@
             position: relative !important;
             z-index: 1000 !important;
         }
+
+        /* Examples gallery */
+        .examples-section {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .examples-section h3 {
+            margin: 0 0 8px 0;
+            color: #ffffff;
+            font-size: 1em;
+        }
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .example-item {
+            position: relative;
+            width: 100%;
+            padding-top: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .example-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+        }
+        .example-item img {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .example-item .label {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 100%);
+            color: #e5e7eb;
+            font-size: 11px;
+            padding: 4px 6px;
+            text-align: center;
+        }
         
         @media (max-width: 1200px) {
             .left-panel {
@@ -430,8 +484,8 @@
 <script type="importmap">
   {
     "imports": {
-      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.6/spark.module.js",
+      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.178.0/three.module.js",
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.9/spark.module.js",
       "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.20/+esm"
     }
   }
@@ -445,16 +499,15 @@
                 <h1 style="margin: 0; flex: 1; text-align: left;">
                   <span class="header-title-wrap">FlashWorld Spark Demo
                     <span class="info-tip">!
-                      <span class="tooltip" style="max-width: 260px; text-align: left;">Note: Front-end real-time rend ering in Spark uses compressed Gaussian Splat attributes. Visual quality in this demo may be lower than offline/back-end rendering.
-                      Also, the generation is fast but the downloading may be slow, please be patient.
+                      <span class="tooltip" style="max-width: 260px; text-align: left;">Front-end real-time rendering in Spark uses compressed and pruned Gaussians. Visual quality in this demo may be lower than offline/back-end rendering.
                       </span>
                     </span>
                   </span>
                 </h1>
                 <div class="header-links" style="margin-left: 20px;">
-                    <a href="#" target="_blank">Paper</a>
-                    <a href="#" target="_blank">Code</a>
-                    <a href="#" target="_blank">Project Page</a>
+                    <a href="https://arxiv.org/pdf/2510.13678" target="_blank">Paper</a>
+                    <a href="https://github.com/imlixinyang/FlashWorld" target="_blank">Code</a>
+                    <a href="https://imlixinyang.github.io/FlashWorld-Project-Page/" target="_blank">Project Page</a>
                 </div>
             </div>
         </header>
@@ -464,11 +517,12 @@
             <!-- Left Panel: Simplified Guidance -->
             <div class="left-panel">
                 <div class="guidance">
-                    <h2>Instructions</h2>
+                    <!-- <h2>Instructions</h2> -->
                     
                     <div class="step">
                         <h3>1. Configure</h3>
                         <p>Set FOV and Resolution and Click "Fix Configurations"</p>
+                        <p><strong>Important</strong>: You need to specify your Hugging Face Access Token with READ permission to use the online free ZeroGPU service.</p>
                     </div>
 
 
@@ -496,6 +550,12 @@
                         <p><strong>Space:</strong> Record camera</p>
                     </div>
 
+                </div>
+
+                <!-- Examples Gallery -->
+                <div id="examples-section" class="examples-section">
+                    <h3>Examples</h3>
+                    <div id="examples-grid" class="examples-grid"></div>
                 </div>
             </div>
 
@@ -640,6 +700,31 @@
   function updateStatus(message, cameraCount = null) {
     const cameraText = cameraCount !== null ? `Cameras: ${cameraCount}` : `Cameras: ${cameraParams.length}`;
     statusBar.textContent = `${message} | ${cameraText} | Status: ${fixGenerationFOV ? 'Ready to record' : 'Configure settings'}`;
+    
+    // Update save trajectory button state
+    updateSaveTrajectoryButton();
+  }
+  
+  // Update save trajectory button state based on camera count
+  function updateSaveTrajectoryButton() {
+    if (window.saveTrajectoryController) {
+      if (cameraParams.length >= 2) {
+        window.saveTrajectoryController.enable();
+      } else {
+        window.saveTrajectoryController.disable();
+      }
+    }
+  }
+  
+  // Auth-aware fetch helper that injects Authorization header when HF_TOKEN is set
+  function fetchWithAuth(url, options = {}) {
+    const mergedOptions = { ...options };
+    const headers = new Headers(options && options.headers ? options.headers : undefined);
+    if (guiOptions && guiOptions.HF_TOKEN && String(guiOptions.HF_TOKEN).trim().length > 0) {
+      headers.set('Authorization', `Bearer ${guiOptions.HF_TOKEN}`);
+    }
+    mergedOptions.headers = headers;
+    return fetch(url, mergedOptions);
   }
   
   // Show/hide loading
@@ -731,7 +816,7 @@
 
     const pollOnce = async () => {
       try {
-        const resp = await fetch(`${guiOptions.BackendAddress}/task/${taskId}`);
+        const resp = await fetchWithAuth(`${guiOptions.BackendAddress}/task/${taskId}`);
         if (!resp.ok) return;
         const info = await resp.json();
         if (!info || !info.success) return;
@@ -757,7 +842,7 @@
           latestGenerationTime = typeof info.generation_time === 'number' ? info.generation_time : null;
           // Proceed to download the generated file like the normal path
           updateStatus('Downloading generated scene...', cameraParams.length);
-          const response = await fetch(guiOptions.BackendAddress + info.download_url);
+          const response = await fetchWithAuth(guiOptions.BackendAddress + info.download_url);
           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
           const contentLength = response.headers.get('content-length');
           const total = parseInt(contentLength || '0', 10);
@@ -809,7 +894,7 @@
           // Notify backend to delete the server file after client has downloaded it
           try {
             if (info.file_id) {
-              const resp = await fetch(`${guiOptions.BackendAddress}/delete/${info.file_id}`, { method: 'POST' });
+              const resp = await fetchWithAuth(`${guiOptions.BackendAddress}/delete/${info.file_id}`, { method: 'POST' });
               if (!resp.ok) console.warn('Delete notify failed');
             }
           } catch (e) {
@@ -887,6 +972,7 @@
   const guiOptions = {
     // 后端地址，默认为本页面ip
     BackendAddress: `${window.location.protocol}//${window.location.hostname}:7860`,
+    HF_TOKEN: "",
     FOV: 60,
     LoadFromJson: () => { 
       const jsonInput = document.querySelector("#json-input");
@@ -936,6 +1022,46 @@
     },
     imageIndex: 0,
     inputTextPrompt: "",
+    // Step 6: All-in-one JSON IO
+    LoadAllFromJson: () => {
+      // Full load (image/text/index/resolution/cameras)
+      window.loadTrajectoryOnly = false;
+      const jsonInput = document.querySelector("#json-input");
+      if (jsonInput) jsonInput.click();
+    },
+    SaveAllToJson: () => {
+      // Build JSON payload matching transmission format
+      const [nStr, hStr, wStr] = guiOptions.Resolution.split('x');
+      const n = parseInt(nStr), h = parseInt(hStr), w = parseInt(wStr);
+      const fovDeg = guiOptions.FOV;
+      const fy = 0.5 / Math.tan(0.5 * fovDeg * Math.PI / 180) * h;
+      const fx = fy; // keep fx consistent with fy-derived FOV
+      const cx = 0.5 * w;
+      const cy = 0.5 * h;
+
+      const payload = {
+        image_prompt: inputImageBase64 ? inputImageBase64 : null,
+        text_prompt: guiOptions.inputTextPrompt || "",
+        image_index: guiOptions.imageIndex || 0,
+        resolution: [n, h, w],
+        cameras: cameraParams.map(cam => ({
+          position: [cam.position.x, cam.position.y, cam.position.z],
+          quaternion: [cam.quaternion.w, cam.quaternion.x, cam.quaternion.y, cam.quaternion.z],
+          fx, fy, cx, cy
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `scene_all_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      updateStatus('All data saved to JSON.', cameraParams.length);
+    },
     
     // Camera trajectory templates
     trajectoryMode: "Manual",
@@ -949,11 +1075,6 @@
       generateCameraTrajectory(guiOptions.templateType);
     },
     saveTrajectoryToJson: () => {
-      if (cameraParams.length === 0) {
-        updateStatus('No cameras to save.', cameraParams.length);
-        console.warn('No cameras to save');
-        return;
-      }
 
       // Build JSON payload compatible with loader
       const [nStr, hStr, wStr] = guiOptions.Resolution.split('x');
@@ -1057,89 +1178,150 @@
       console.log('Interpolated cameras:', interpolatedCameras.length);
       updateStatus('Sending request to backend...', cameraParams.length);
 
-      // 根据后端类型选择不同的请求方式
-      let requestUrl, requestBody;
-      
-      if (true) {
-        // Flask后端：直接POST到/generate
-        requestUrl = guiOptions.BackendAddress + '/generate';
-        requestBody = JSON.stringify({
-          image_prompt: inputImageBase64 ? inputImageBase64 : "",
-          text_prompt: guiOptions.inputTextPrompt,
-          image_index: 0,
-          resolution: [
-            parseInt(guiOptions.Resolution.split('x')[0]), 
-            parseInt(guiOptions.Resolution.split('x')[1]), 
-            parseInt(guiOptions.Resolution.split('x')[2])
-          ],
-          cameras: interpolatedCameras.map(cam => ({
-            position: [cam.position.x, cam.position.y, cam.position.z],
-            quaternion: [cam.quaternion.w, cam.quaternion.x, cam.quaternion.y, cam.quaternion.z],
-            fx: 0.5 / Math.tan(0.5 * cam.fov * Math.PI / 180) * parseInt(guiOptions.Resolution.split('x')[1]),
-            fy: 0.5 / Math.tan(0.5 * cam.fov * Math.PI / 180) * parseInt(guiOptions.Resolution.split('x')[1]),
-            cx: inputImageBase64 && inputImageResolution
-              ? 0.5 * inputImageResolution.width
-              : 0.5 * parseInt(guiOptions.Resolution.split('x')[2]),
-            cy: inputImageBase64 && inputImageResolution
-              ? 0.5 * inputImageResolution.height
-              : 0.5 * parseInt(guiOptions.Resolution.split('x')[1]),
-          }))
-        });
-      } else {
-        
-      }
+      // 调用 Gradio 后端：POST 到 /gradio_api/call/gradio_generate，然后通过 SSE 获取结果
+      const requestUrl = guiOptions.BackendAddress + '/gradio_api/call/gradio_generate';
+      const requestData = {
+        image_prompt: inputImageBase64 ? inputImageBase64 : "",
+        text_prompt: guiOptions.inputTextPrompt,
+        image_index: 0,
+        resolution: [
+          parseInt(guiOptions.Resolution.split('x')[0]),
+          parseInt(guiOptions.Resolution.split('x')[1]),
+          parseInt(guiOptions.Resolution.split('x')[2])
+        ],
+        cameras: interpolatedCameras.map(cam => ({
+          position: [cam.position.x, cam.position.y, cam.position.z],
+          quaternion: [cam.quaternion.w, cam.quaternion.x, cam.quaternion.y, cam.quaternion.z],
+          fx: 0.5 / Math.tan(0.5 * cam.fov * Math.PI / 180) * parseInt(guiOptions.Resolution.split('x')[1]),
+          fy: 0.5 / Math.tan(0.5 * cam.fov * Math.PI / 180) * parseInt(guiOptions.Resolution.split('x')[1]),
+          cx: inputImageBase64 && inputImageResolution
+            ? 0.5 * inputImageResolution.width
+            : 0.5 * parseInt(guiOptions.Resolution.split('x')[2]),
+          cy: inputImageBase64 && inputImageResolution
+            ? 0.5 * inputImageResolution.height
+            : 0.5 * parseInt(guiOptions.Resolution.split('x')[1]),
+        }))
+      };
 
-      // 请求后端生成（异步：返回task_id并开始排队轮询）
-      fetch(requestUrl, {
+      fetchWithAuth(requestUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         mode: 'cors',
-        body: requestBody
+        body: JSON.stringify({ data: [JSON.stringify(requestData)] })
       })
-      .then(response => {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          return response.json();
-        } else {
-          return response.blob().then(blob => {
-            const url = URL.createObjectURL(blob);
-            return { url };
+      .then(response => response.json())
+      .then(data => {
+        // Gradio 总是返回 event_id，需要使用 SSE 获取生成结果
+        if (!data || !data.event_id) {
+          throw new Error('Invalid Gradio response format - no event_id');
+        }
+        return fetchWithAuth(guiOptions.BackendAddress + `/gradio_api/call/gradio_generate/${data.event_id}`)
+          .then(resp => {
+            if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
+            return resp.text();
+          })
+          .then(sseText => {
+            const lines = sseText.split('\n');
+            let eventType = null;
+            let dataContent = null;
+            for (const line of lines) {
+              if (line.startsWith('event: ')) eventType = line.substring(7);
+              else if (line.startsWith('data: ')) dataContent = line.substring(6);
+            }
+            if (eventType !== 'complete' || !dataContent) {
+              throw new Error('Gradio SSE response not complete or missing data');
+            }
+            const resultData = JSON.parse(dataContent);
+            if (!resultData || resultData.length === 0) {
+              throw new Error('Invalid Gradio generation result format');
+            }
+            const responseData = JSON.parse(resultData[0]);
+            if (!responseData.success) {
+              throw new Error('Gradio generation failed: ' + (responseData.error || 'Unknown error'));
+            }
+
+            // 显示生成信息
+            showGenerationInfo(responseData.generation_time, responseData.file_size);
+            showDownloadProgress();
+            updateStatus('Downloading generated scene...', cameraParams.length);
+
+            // 下载文件：调用 download_file 获取下载 event_id，然后通过 SSE 拿到 URL，再实际下载
+            return fetchWithAuth(guiOptions.BackendAddress + '/gradio_api/call/download_file', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ data: [responseData.file_id] })
+            })
+            .then(r => r.json())
+            .then(downloadEvent => {
+              return fetchWithAuth(guiOptions.BackendAddress + `/gradio_api/call/download_file/${downloadEvent.event_id}`)
+                .then(r => {
+                  if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+                  return r.text();
+                })
+                .then(downloadSseText => {
+                  const lines = downloadSseText.split('\n');
+                  let eventType = null;
+                  let dataContent = null;
+                  for (const line of lines) {
+                    if (line.startsWith('event: ')) eventType = line.substring(7);
+                    else if (line.startsWith('data: ')) dataContent = line.substring(6);
+                  }
+                  if (eventType !== 'complete' || !dataContent) {
+                    throw new Error('Gradio download SSE response not complete or missing data');
+                  }
+                  const fileData = JSON.parse(dataContent);
+                  if (!fileData || fileData.length === 0 || !fileData[0].url) {
+                    throw new Error('Invalid file data format from Gradio');
+                  }
+                  return fileData[0].url;
+                });
+            });
+          })
+          .then(fileUrl => {
+            return fetchWithAuth(fileUrl).then(response => {
+              if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+              const contentLength = response.headers.get('content-length');
+              const total = parseInt(contentLength || '0', 10);
+              let loaded = 0;
+              const reader = response.body.getReader();
+              const chunks = [];
+              function pump() {
+                return reader.read().then(({ done, value }) => {
+                  if (done) return new Blob(chunks);
+                  chunks.push(value);
+                  loaded += value.length;
+                  if (total) updateProgressBar((loaded / total) * 100);
+                  return pump();
+                });
+              }
+              return pump().then(blob => {
+                const url = URL.createObjectURL(blob);
+            return { url, __deleteAfterDownloadFileId: (typeof responseData !== 'undefined' ? responseData.file_id : null) };
+              });
+            });
           });
-        }
       })
       .then(data => {
-        console.log(data);
-        {
-          // 异步队列协议：后端返回 task_id + queue 信息（202）
-          if (data && data.success && data.task_id) {
-            updateStatus('Queued request submitted. Waiting in queue...', cameraParams.length);
-            showQueueWaiting(data.queue?.position || 0, data.queue?.running_count || 0, data.queue?.queued_count || 0);
-            // 轮询直到任务完成并下载
-            return pollTaskUntilReady(data.task_id).then(() => ({ url: null }));
-          }
-          // 兼容旧的直接文件响应格式
-          if (data && data.url) {
-            updateStatus('Loading generated scene...', cameraParams.length);
-            return Promise.resolve(data);
-          }
-          throw new Error('Invalid Flask response (expected task_id)');
-        }
-      })
-      .then(data => {
-        if (data.url) {
+        if (data && data.url) {
           updateStatus('Loading 3D scene...', cameraParams.length);
-          // Remove the instruction splat when generation is complete
           if (instructionSplat) {
             scene.remove(instructionSplat);
             console.log('Instruction splat removed');
           }
           const GeneratedSplat = new SplatMesh({ url: data.url });
           scene.add(GeneratedSplat);
-          currentGeneratedSplat = GeneratedSplat; // 保存新生成的场景引用
+          currentGeneratedSplat = GeneratedSplat;
           console.log('3D scene loaded successfully!');
           updateStatus('Scene generated successfully!', cameraParams.length);
           hideDownloadProgress();
           showLoading(false);
+
+          // 通知后端删除文件（如果有 file_id）
+          if (data.__deleteAfterDownloadFileId) {
+            fetchWithAuth(guiOptions.BackendAddress + '/delete/' + data.__deleteAfterDownloadFileId, { method: 'POST' })
+              .then(() => console.log('Delete notify sent'))
+              .catch(err => console.warn('Delete notify failed', err));
+          }
         }
       })
       .catch(error => {
@@ -1150,6 +1332,194 @@
       });
     }
   };
+
+  // =========================
+  // Examples & JSON load utils
+  // =========================
+  const EXAMPLE_FILES = Array.from({ length: 8 }, (_, i) => `examples/${i + 1}.json`);
+
+  function processJsonLoad(jsonData, loadTrajectoryOnlyProvided) {
+    // Determine mode and reset flag if coming from global
+    const loadTrajectoryOnly = !!loadTrajectoryOnlyProvided;
+
+    // Clear existing cameras and interpolated splats
+    cameraSplats.forEach(splat => scene.remove(splat));
+    cameraSplats.length = 0;
+    cameraParams.length = 0;
+    interpolatedCamerasSplats.forEach(splat => scene.remove(splat));
+    interpolatedCamerasSplats.length = 0;
+
+    try {
+      const imagePrompt = jsonData.image_prompt || jsonData.imagePrompt || null;
+      const textPrompt = jsonData.text_prompt || jsonData.textPrompt || "";
+      const cameras = jsonData.cameras || [];
+      const resolution = jsonData.resolution || [16, 480, 640];
+      const imageIndex = jsonData.image_index || jsonData.imageIndex || 0;
+
+      // Prompt/image only for full load
+      if (!loadTrajectoryOnly && imagePrompt) {
+        inputImageBase64 = imagePrompt;
+        const previewArea = document.getElementById('image-preview-area');
+        const previewImg = document.getElementById('preview-img');
+        if (previewImg && previewArea) {
+          previewImg.src = inputImageBase64;
+          previewArea.style.display = 'block';
+        }
+      }
+
+      if (!loadTrajectoryOnly) {
+        guiOptions.inputTextPrompt = textPrompt;
+        guiOptions.imageIndex = imageIndex;
+        syncGuiPromptControls();
+      }
+
+      // Infer FOV from first camera fy for full load
+      if (!loadTrajectoryOnly && Array.isArray(resolution) && resolution.length === 3 && cameras && cameras.length > 0) {
+        const H = resolution[1];
+        const firstCam = cameras[0];
+        if (firstCam && typeof firstCam.fy === 'number' && isFinite(firstCam.fy) && firstCam.fy > 0) {
+          const inferredFov = 2 * Math.atan(0.5 * H / firstCam.fy) * 180 / Math.PI;
+          guiOptions.FOV = inferredFov;
+        }
+      }
+
+      if (cameras && cameras.length > 0) {
+        let jsonFirstPosition = null;
+        let jsonFirstQuaternion = null;
+        const firstCameraData = cameras[0];
+        if (Array.isArray(firstCameraData?.position) && firstCameraData.position.length === 3) {
+          jsonFirstPosition = new THREE.Vector3(
+            firstCameraData.position[0],
+            firstCameraData.position[1],
+            firstCameraData.position[2]
+          );
+        }
+        if (Array.isArray(firstCameraData?.quaternion) && firstCameraData.quaternion.length === 4) {
+          jsonFirstQuaternion = new THREE.Quaternion(
+            firstCameraData.quaternion[1],
+            firstCameraData.quaternion[2],
+            firstCameraData.quaternion[3],
+            firstCameraData.quaternion[0]
+          );
+        }
+
+        cameras.forEach((cameraData) => {
+          let aspect = 1.0;
+          if (Array.isArray(resolution) && resolution.length === 3) {
+            aspect = resolution[2] / resolution[1];
+          } else {
+            aspect = guiOptions.Resolution.split('x')[2] / guiOptions.Resolution.split('x')[1];
+          }
+
+          let fov = 60;
+          if (loadTrajectoryOnly) {
+            fov = guiOptions.FOV;
+          } else {
+            if (Array.isArray(resolution) && resolution.length === 3 && typeof cameraData.fy === 'number' && cameraData.fy > 0) {
+              const H = resolution[1];
+              fov = 2 * Math.atan(0.5 * H / cameraData.fy) * 180 / Math.PI;
+              guiOptions.FOV = fov;
+            } else {
+              fov = guiOptions.FOV;
+            }
+          }
+
+          const cam = new THREE.PerspectiveCamera(fov, aspect);
+          if (Array.isArray(cameraData.position) && cameraData.position.length === 3) {
+            cam.position.set(cameraData.position[0], cameraData.position[1], cameraData.position[2]);
+          }
+          if (Array.isArray(cameraData.quaternion) && cameraData.quaternion.length === 4) {
+            cam.quaternion.set(
+              cameraData.quaternion[1],
+              cameraData.quaternion[2],
+              cameraData.quaternion[3],
+              cameraData.quaternion[0]
+            );
+          }
+
+          if (jsonFirstPosition && jsonFirstQuaternion) {
+            const jsonFirstC2W = new THREE.Matrix4();
+            jsonFirstC2W.compose(jsonFirstPosition, jsonFirstQuaternion, new THREE.Vector3(1, 1, 1));
+            const currentC2W = new THREE.Matrix4();
+            currentC2W.compose(cam.position, cam.quaternion, new THREE.Vector3(1, 1, 1));
+            const refW2C = jsonFirstC2W.clone().invert();
+            const relativeTransform = refW2C.clone().multiply(currentC2W);
+            const fixedC2W = new THREE.Matrix4();
+            fixedC2W.compose(new THREE.Vector3(0, 0, 0), new THREE.Quaternion(0, 0, 0, 1), new THREE.Vector3(1, 1, 1));
+            const newTransform = fixedC2W.clone().multiply(relativeTransform);
+            const newPosition = new THREE.Vector3();
+            const newQuaternion = new THREE.Quaternion();
+            const newScale = new THREE.Vector3();
+            newTransform.decompose(newPosition, newQuaternion, newScale);
+            cam.position.copy(newPosition);
+            cam.quaternion.copy(newQuaternion);
+          }
+
+          cam.fov = fov;
+          cam.aspect = aspect;
+          cam.updateProjectionMatrix();
+
+          const cameraSplat = createCameraSplat(cam);
+          cameraSplats.push(cameraSplat);
+          cameraParams.push({
+            position: cam.position.clone(),
+            quaternion: cam.quaternion.clone(),
+            fov: cam.fov,
+            aspect: cam.aspect,
+          });
+          scene.add(cameraSplat);
+        });
+      }
+
+      if (!loadTrajectoryOnly && Array.isArray(resolution) && resolution.length === 3) {
+        guiOptions.Resolution = `${resolution[0]}x${resolution[1]}x${resolution[2]}`;
+      }
+
+      if (loadTrajectoryOnly) {
+        updateStatus(`Trajectory loaded: ${jsonData.cameras ? jsonData.cameras.length : 0} cameras`, cameraParams.length);
+      } else {
+        updateStatus(`JSON loaded: ${jsonData.cameras ? jsonData.cameras.length : 0} cameras`, cameraParams.length);
+      }
+    } catch (error) {
+      console.error("JSON data processing error:", error);
+    }
+  }
+
+  async function renderExamples() {
+    const grid = document.getElementById('examples-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const items = [];
+    for (const path of EXAMPLE_FILES) {
+      try {
+        const resp = await fetch(path);
+        if (!resp.ok) continue;
+        const data = await resp.json();
+        const thumb = data.image_prompt || data.imagePrompt || null;
+        items.push({ path, data, thumb });
+      } catch (_) { /* ignore */ }
+    }
+    items.slice(0, 10).forEach((item, idx) => {
+      const div = document.createElement('div');
+      div.className = 'example-item';
+      div.title = item.path;
+      if (item.thumb) {
+        const img = document.createElement('img');
+        img.src = item.thumb;
+        div.appendChild(img);
+      } else {
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = `Example ${idx + 1}`;
+        div.appendChild(label);
+      }
+      div.addEventListener('click', () => {
+        // Full JSON load behavior
+        processJsonLoad(item.data, false);
+      });
+      grid.appendChild(div);
+    });
+  }
 
   // Initialize renderer and GUI when DOM is ready
   function initializeApp() {
@@ -1169,9 +1539,10 @@
   }
   
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
+    document.addEventListener('DOMContentLoaded', () => { initializeApp(); renderExamples(); });
   } else {
     initializeApp();
+    renderExamples();
   }
 
   // =========================
@@ -1227,6 +1598,37 @@
       interpolatedCameras.push(interpolatedCamera);
     }
     return interpolatedCameras;
+  }
+
+  // 强制同步文本与索引控件显示
+  function syncGuiPromptControls() {
+    try {
+      if (window.inputTextPromptController) {
+        window.inputTextPromptController.setValue(guiOptions.inputTextPrompt);
+        if (typeof window.inputTextPromptController.updateDisplay === 'function') {
+          window.inputTextPromptController.updateDisplay();
+        }
+      }
+      if (window.imageIndexController) {
+        window.imageIndexController.setValue(guiOptions.imageIndex);
+        if (typeof window.imageIndexController.updateDisplay === 'function') {
+          window.imageIndexController.updateDisplay();
+        }
+      }
+    } catch (e) {
+      console.debug('syncGuiPromptControls error:', e);
+    }
+    // 再尝试一次，防止控件尚未就绪
+    requestAnimationFrame(() => {
+      try {
+        if (window.inputTextPromptController && typeof window.inputTextPromptController.updateDisplay === 'function') {
+          window.inputTextPromptController.updateDisplay();
+        }
+        if (window.imageIndexController && typeof window.imageIndexController.updateDisplay === 'function') {
+          window.imageIndexController.updateDisplay();
+        }
+      } catch (_) {}
+    });
   }
 
   // 创建立方体的splat可视化
@@ -1518,6 +1920,7 @@
       // Step 1: Configure Generation Settings
       const step1Folder = gui.addFolder('1. Configure Settings');
       step1Folder.add(guiOptions, "BackendAddress").name("Backend Address");
+      step1Folder.add(guiOptions, "HF_TOKEN").name("HF Token");
       
       // FOV和Resolution控制器，初始时启用
       const fovController = step1Folder.add(guiOptions, "FOV", 0, 120, 1).name("FOV").onChange((value) => {
@@ -1529,6 +1932,9 @@
       )).name("Resolution (NxHxW)").onChange((value) => {
         updateCanvasSize();
       });
+      // Expose for programmatic updates after JSON load
+      window.fovController = fovController;
+      window.resolutionController = resolutionController;
       
       // Fix Configuration按钮放在最下面
       const fixGenerationFOVController = step1Folder.add(guiOptions, "fixGenerationFOV").name("Fix Configuration");
@@ -1563,6 +1969,9 @@
       // 加载/保存JSON轨迹按钮
       const loadTrajectoryController = trajectoryFolder.add(guiOptions, "LoadTrajectoryFromJson").name("Load from JSON");
       const saveTrajectoryController = trajectoryFolder.add(guiOptions, "saveTrajectoryToJson").name("Save Trajectory");
+      
+      // 初始状态：禁用保存按钮（相机数量不够）
+      saveTrajectoryController.disable();
       
       // 清理相机按钮
       const clearAllCamerasController = trajectoryFolder.add(guiOptions, "clearAllCameras").name("Clear All Cameras");
@@ -1630,12 +2039,16 @@
 
       // Store controllers globally so they can be accessed from guiOptions
       window.fixGenerationFOVController = fixGenerationFOVController;
+      window.saveTrajectoryController = saveTrajectoryController;
 
       // Step 3: Add Scene Prompts
       const step3Folder = gui.addFolder('3. Add Scene Prompts');
       step3Folder.add(guiOptions, "inputImagePrompt").name("Input Image Prompt");
-      step3Folder.add(guiOptions, "inputTextPrompt").name("Input Text Prompt");
-      step3Folder.add(guiOptions, "imageIndex", 0, 24, 1).name("Image Index");
+      const inputTextPromptController = step3Folder.add(guiOptions, "inputTextPrompt").name("Input Text Prompt");
+      const imageIndexController = step3Folder.add(guiOptions, "imageIndex", 0, 24, 1).name("Image Index");
+      // Expose for programmatic updates after JSON load
+      window.inputTextPromptController = inputTextPromptController;
+      window.imageIndexController = imageIndexController;
       
 
       // Step 4: Generate Your Scene
@@ -1658,6 +2071,12 @@
         updateStatus(`Scrubbing trajectory: t=${value.toFixed(3)}`, cameraParams.length);
       });
       step5Folder.open();
+
+      // Step 6: Load/Save All JSON
+      const step6Folder = gui.addFolder('6. JSON (All-in-one)');
+      step6Folder.add(guiOptions, "LoadAllFromJson").name("Load All from JSON");
+      step6Folder.add(guiOptions, "SaveAllToJson").name("Save All to JSON");
+      step6Folder.open();
       
     }
   }
@@ -1858,195 +2277,9 @@
         console.error("JSON parsing error:", error);
         return;
       }
-
-      // 检查是否是只加载轨迹
-      const loadTrajectoryOnly = window.loadTrajectoryOnly;
-      window.loadTrajectoryOnly = false; // 重置标志
-
-      if (loadTrajectoryOnly) {
-        // 只加载轨迹：清理所有已有的相机和插值相机
-        cameraSplats.forEach(splat => scene.remove(splat));
-        cameraSplats.length = 0;
-        cameraParams.length = 0;
-        interpolatedCamerasSplats.forEach(splat => scene.remove(splat));
-        interpolatedCamerasSplats.length = 0;
-      } else {
-        // 加载完整JSON：清理所有已有的相机和插值相机
-        cameraSplats.forEach(splat => scene.remove(splat));
-        cameraSplats.length = 0;
-        cameraParams.length = 0;
-        interpolatedCamerasSplats.forEach(splat => scene.remove(splat));
-        interpolatedCamerasSplats.length = 0;
-      }
-
-      try {
-        // 兼容不同命名的字段
-        const imagePrompt = jsonData.image_prompt || jsonData.imagePrompt || null;
-        const textPrompt = jsonData.text_prompt || jsonData.textPrompt || "";
-        const cameras = jsonData.cameras || [];
-        const resolution = jsonData.resolution || [16, 480, 640];
-        const imageIndex = jsonData.image_index || jsonData.imageIndex || 0;
-
-        console.log("Loaded JSON data:", {
-          imagePrompt,
-          textPrompt,
-          cameras: cameras.length,
-          resolution,
-          imageIndex
-        });
-
-        // 处理图像提示（仅在非轨迹加载模式下）
-        if (!loadTrajectoryOnly && imagePrompt) {
-          inputImageBase64 = imagePrompt;
-          console.log("Image prompt loaded");
-        }
-
-        // 设置文本提示（仅在非轨迹加载模式下）
-        if (!loadTrajectoryOnly) {
-          guiOptions.inputTextPrompt = textPrompt;
-          guiOptions.imageIndex = imageIndex;
-        }
-
-        // 处理相机数据
-        if (cameras && cameras.length > 0) {
-          let jsonFirstCamera = null;
-          let jsonFirstPosition = null;
-          let jsonFirstQuaternion = null;
-          
-          // 首先获取JSON中第一个相机的位置和四元数
-          if (loadTrajectoryOnly && cameras.length > 0) {
-            const firstCameraData = cameras[0];
-            if (Array.isArray(firstCameraData.position) && firstCameraData.position.length === 3) {
-              jsonFirstPosition = new THREE.Vector3(
-                firstCameraData.position[0],
-                firstCameraData.position[1],
-                firstCameraData.position[2]
-              );
-            }
-            if (Array.isArray(firstCameraData.quaternion) && firstCameraData.quaternion.length === 4) {
-              jsonFirstQuaternion = new THREE.Quaternion(
-                firstCameraData.quaternion[1],
-                firstCameraData.quaternion[2],
-                firstCameraData.quaternion[3],
-                firstCameraData.quaternion[0]
-              );
-            }
-          }
-          
-          cameras.forEach((cameraData, index) => {
-            // 解析分辨率
-            let aspect = 1.0;
-            if (Array.isArray(resolution) && resolution.length === 3) {
-              aspect = resolution[2] / resolution[1];
-            } else {
-              aspect = guiOptions.Resolution.split('x')[2] / guiOptions.Resolution.split('x')[1];
-            }
-            
-            // 根据加载模式决定FOV
-            let fov = 60;
-            if (loadTrajectoryOnly) {
-              // 轨迹加载：使用GUI中设定的FOV
-              fov = guiOptions.FOV;
-            } else {
-              // 完整JSON加载：使用JSON中的FOV或默认值
-              if (cameraData.fx && cameraData.fy) {
-                fov = 2 * Math.atan(0.5 / cameraData.fx) * 180 / Math.PI;
-              }
-            }
-            
-            const cam = new THREE.PerspectiveCamera(fov, aspect);
-
-            // 设置位置和四元数
-            if (Array.isArray(cameraData.position) && cameraData.position.length === 3) {
-              cam.position.set(cameraData.position[0], cameraData.position[1], cameraData.position[2]);
-            }
-
-            if (Array.isArray(cameraData.quaternion) && cameraData.quaternion.length === 4) {
-              // 注意：three.js的顺序是 (x, y, z, w)
-              cam.quaternion.set(
-                cameraData.quaternion[1],
-                cameraData.quaternion[2],
-                cameraData.quaternion[3],
-                cameraData.quaternion[0]
-              );
-            }
-            
-            // 轨迹加载：第一个相机强制设置为原点
-            // if (loadTrajectoryOnly && index === 0) {
-            //   cam.position.set(0, 0, 0);
-            //   cam.quaternion.set(0, 0, 0, 1);
-            // }
-
-            // 轨迹加载：归一化到相对于固定FOV相机的位置
-            if (loadTrajectoryOnly && jsonFirstPosition && jsonFirstQuaternion) {
-              // 参考Python代码的归一化逻辑
-              // 1. 计算JSON第一个相机的c2w矩阵
-              const jsonFirstC2W = new THREE.Matrix4();
-              jsonFirstC2W.compose(jsonFirstPosition, jsonFirstQuaternion, new THREE.Vector3(1, 1, 1));
-              
-              // 2. 计算当前相机的c2w矩阵
-              const currentC2W = new THREE.Matrix4();
-              currentC2W.compose(cam.position, cam.quaternion, new THREE.Vector3(1, 1, 1));
-              
-              // 3. 计算相对变换：ref_w2c @ current_c2w
-              const refW2C = jsonFirstC2W.clone().invert();
-              const relativeTransform = refW2C.clone().multiply(currentC2W);
-              
-              // 4. 将相对变换应用到原点相机上（作为参考）
-              const fixedC2W = new THREE.Matrix4();
-              fixedC2W.compose(new THREE.Vector3(0, 0, 0), new THREE.Quaternion(0, 0, 0, 1), new THREE.Vector3(1, 1, 1));
-              
-              const newTransform = fixedC2W.clone().multiply(relativeTransform);
-              
-              // 5. 提取新的位置和旋转
-              const newPosition = new THREE.Vector3();
-              const newQuaternion = new THREE.Quaternion();
-              const newScale = new THREE.Vector3();
-              newTransform.decompose(newPosition, newQuaternion, newScale);
-              
-              cam.position.copy(newPosition);
-              cam.quaternion.copy(newQuaternion);
-            }
-
-            // 设置FOV和焦距（仅在非轨迹加载模式下）
-            if (!loadTrajectoryOnly && cameraData.fx && cameraData.fy) {
-              cam.fov = fov;
-              cam.aspect = cameraData.fx / cameraData.fy;
-              cam.updateProjectionMatrix();
-            } else if (loadTrajectoryOnly) {
-              // 轨迹加载：使用GUI中设定的FOV和aspect
-              cam.fov = fov;
-              cam.aspect = aspect;
-              cam.updateProjectionMatrix();
-            }
-
-            const cameraSplat = createCameraSplat(cam);
-            cameraSplats.push(cameraSplat);
-            cameraParams.push({
-              position: cam.position.clone(),
-              quaternion: cam.quaternion.clone(),
-              fov: cam.fov,
-              aspect: cam.aspect,
-            });
-            scene.add(cameraSplat);
-          });
-          
-          console.log(cameraParams);
-        }
-
-        // 设置分辨率（仅在非轨迹加载模式下）
-        if (!loadTrajectoryOnly && Array.isArray(resolution) && resolution.length === 3) {
-          guiOptions.Resolution = `${resolution[0]}x${resolution[1]}x${resolution[2]}`;
-        }
-
-        // 显示成功消息
-        if (loadTrajectoryOnly) {
-          updateStatus(`Trajectory loaded: ${cameras.length} cameras`, cameraParams.length);
-        } else {
-        }
-      } catch (error) {
-        console.error("JSON data processing error:", error);
-      }
+      const loadTrajectoryOnly = !!window.loadTrajectoryOnly;
+      window.loadTrajectoryOnly = false;
+      processJsonLoad(jsonData, loadTrajectoryOnly);
     };
     reader.readAsText(file);
   };

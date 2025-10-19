@@ -32,8 +32,12 @@ from diffusers.models.modeling_utils import ModelMixin
 
 try:
     from sageattention import sageattn
+    print("SageAttention is available")
 except ImportError:
     sageattn = None
+    print("SageAttention is not available")
+
+# sageattn = None
 
 class FP32LayerNorm(nn.LayerNorm):
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
@@ -372,7 +376,7 @@ class WanTransformerBlock(nn.Module):
         # 1. Self-attention
         norm_hidden_states = (self.norm1(hidden_states).mul_(1 + scale_msa).add_(shift_msa))
         attn_output = self.attn1(hidden_states=norm_hidden_states, rotary_emb=rotary_emb)
-        hidden_states += attn_output * gate_msa
+        hidden_states += attn_output.mul_(gate_msa)
         # hidden_states = hidden_states.type_as(hidden_states)
 
         # print(hidden_states.dtype)
@@ -556,14 +560,8 @@ class WanTransformer3DModel(ModelMixin, ConfigMixin, PeftAdapterMixin, FromOrigi
             hidden_states = hidden_states.to(torch.bfloat16)
 
         # 4. Transformer blocks
-        if torch.is_grad_enabled() and self.gradient_checkpointing:
-            for block in self.blocks:
-                hidden_states = self._gradient_checkpointing_func(
-                    block, hidden_states, encoder_hidden_states, timestep_proj, rotary_emb
-                )
-        else:
-            for block in self.blocks:
-                hidden_states = block(hidden_states, encoder_hidden_states, timestep_proj, rotary_emb)
+        for block in self.blocks:
+            hidden_states = block(hidden_states, encoder_hidden_states, timestep_proj, rotary_emb)
 
         # 5. Output norm, projection & unpatchify
         if temb.ndim == 3:

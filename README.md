@@ -29,6 +29,8 @@ https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
 
 The code is actively updated. Please stay tuned!
 
+- [2025.10.19] We release a Command Line Interface. If you want to achieve the **best** generation results with FlashWorld, you can create a good input JSON using the Web Interface and then use the CLI to regenerate and render the scene.
+
 - [2025.10.17] We release an online demo on Huggingface Spaces at [FlashWorld Online Demo](https://huggingface.co/spaces/imlixinyang/FlashWorld-Demo-Spark).
 
 - [2025.10.16] Paper and local demo code released.
@@ -38,15 +40,24 @@ The code is actively updated. Please stay tuned!
 - install packages
 ```
 pip install torch torchvision
-pip install triton transformers pytorch_lightning omegaconf ninja numpy jaxtyping rich tensorboard einops moviepy==1.0.3 webdataset accelerate opencv-python lpips av plyfile ftfy peft tensorboard pandas flask
+pip install triton transformers omegaconf ninja numpy jaxtyping rich einops moviepy==1.0.3 accelerate opencv-python av plyfile ftfy pandas uvicorn nanobind
 ```
 
 Please refer to the `requirements.txt` file for the exact package versions.
 
-- install ```gsplat@1.5.2``` and ```diffusers@wan-5Bi2v``` packages
+- install ```gsplat@1.5.2```, ```diffusers@wan-5Bi2v``` and ```spz``` packages
 ```
 pip install git+https://github.com/nerfstudio-project/gsplat.git@32f2a54d21c7ecb135320bb02b136b7407ae5712
 pip install git+https://github.com/huggingface/diffusers.git@447e8322f76efea55d4769cd67c372edbf0715b8
+pip install git+https://github.com/nianticlabs/spz.git@a4fc69e7948c7152e807e6501d73ddc9c149ce37
+```
+
+- (optional) install [sage-attention](https://github.com/thu-ml/SageAttention) package.
+```
+git clone https://github.com/thu-ml/SageAttention.git
+cd SageAttention 
+export EXT_PARALLEL=4 NVCC_APPEND_FLAGS="--threads 8" MAX_JOBS=32 # parallel compiling (Optional)
+python setup.py install  # or pip install -e .
 ```
 
 - clone this repo:
@@ -55,16 +66,41 @@ git clone https://github.com/imlixinyang/FlashWorld.git
 cd FlashWorld
 ```
 
-- run our demo app by:
+## Local Web Interface
+
 ```
 python app.py
 ```
+Then, open your web browser and navigate to ```YOUR_ADDRESS:7860/app``` to start exploring FlashWorld!
 
-If your machine has limited GPU memory, consider adding the ```--offload_t5``` flag to offload text encoding to the CPU, which will reduce GPU memory usage. Note that this may slow down the generation speed somewhat.
+If your machine does not have enough GPU memory, add the ```--offload_t5``` flag to offload text encoding to the CPU, which will reduce GPU memory usage with little impact on generation speed.
+You can also add the ```--offload_vae``` flag, which will greatly reduce GPU memory usage to below 10GB, but will significantly increase generation time. Please use this flag with caution.
 
-Then, open your web browser and navigate to ```http://HOST_IP:7860``` to start exploring FlashWorld!
 
-<!-- We also provide example trajectory josn files and input images in the `examples/` directory. -->
+On a single A800 GPU, the generation time and GPU memory usage under different settings are as follows:
+
+| Generation Time       | GPU Memory | Flags                |
+|----------------------|------------|----------------------|
+| 8.5s                 | 51GB       |                      |
+| 16.6s                | 30GB       | --offload_t5         |
+| 10min                | 9GB        | --offload_t5 --offload_vae |
+
+## Command Line Interface
+
+```bash
+python cli.py --input_dir /path/to/input/json/files --output_dir /path/to/output/directory --video --spz --ply
+```
+
+Parameters:
+- `--input_dir`: Directory containing JSON files with generation parameters (required). We provide some examples in ```./examples``` that you can use the directory directly.
+- `--output_dir`: Directory to save generated results (required)
+- `--video`: Generate video output
+- `--spz`: Export results in SPZ format
+- `--ply`: Export results in PLY format
+- `--video_fps`: Video frame rate (default: 15)
+
+**Note**: The CLI interface provides better rendering results compared to the web interface, as it uses uncompressed Gaussian Parameters. Use the CLI for comparison if you want to use FlashWorld as your baseline.
+
   
 ## More Generation Results
 

@@ -125,7 +125,7 @@ class TimestepEmbedding(nn.Module):
         else:
             return timestep_embedding(t, self.dim, self.max_period, self.time_factor) * self.weight.unsqueeze(0)
 
-@torch.compile(mode="max-autotune-no-cudagraphs", dynamic=True)
+# @torch.compile(mode="max-autotune-no-cudagraphs", dynamic=True)
 def timestep_embedding(t, dim, max_period=10000, time_factor: float = 1000.0):
     """
     Create sinusoidal timestep embeddings.
@@ -341,7 +341,7 @@ def matrix_to_square(mat):
     elif l==4:
         return torch.cat([mat, torch.tensor([0,0,0,1]).repeat(mat.shape[0],mat.shape[1],1,1).to(mat.device)],dim=2)
 
-def export_ply_for_gaussians(path, gaussians, opacity_threshold=0.00, T_norm=None):
+def export_gaussians(gaussians, opacity_threshold=0.00, T_norm=None, ply_path=None, spz_path=None):
 
     sh_degree = int(math.sqrt((gaussians.shape[-1] - sum([3, 1, 3, 4])) / 3 - 1))
 
@@ -380,71 +380,50 @@ def export_ply_for_gaussians(path, gaussians, opacity_threshold=0.00, T_norm=Non
     scales = scales.detach() #.cpu().numpy()
     rotations = rotations.detach() #.cpu().numpy()
 
-    l = ['x', 'y', 'z']
-    # All channels except the 3 DC
-    for i in range(f_dc.shape[1]):
-        l.append('f_dc_{}'.format(i))
-    l.append('opacity')
-    for i in range(scales.shape[1]):
-        l.append('scale_{}'.format(i))
-    for i in range(rotations.shape[1]):
-        l.append('rot_{}'.format(i))
+    """spz
+    Data Layout
+    The Python bindings maintain the same data layout as the C++ library:
 
-    dtype_full = [(attribute, 'f4') for attribute in l]
+    Positions: [x1, y1, z1, x2, y2, z2, ...]
+    Scales: [sx1, sy1, sz1, sx2, sy2, sz2, ...] (log-scale)
+    Rotations: [x1, y1, z1, w1, x2, y2, z2, w2, ...] (quaternions)
+    Alphas: [a1, a2, a3, ...] (before sigmoid activation)
+    Colors: [r1, g1, b1, r2, g2, b2, ...] (base RGB)
+    Spherical Harmonics: Coefficient-major order, e.g., for degree 1: [sh1n1_r, sh1n1_g, sh1n1_b, sh10_r, sh10_g, sh10_b, sh1p1_r, sh1p1_g, sh1p1_b, ...]
+    """
+    if spz_path is not None:
+        import spz
 
-    # 最优化方案：使用numpy的recarray直接创建
-    attributes = torch.cat((xyzs, f_dc, opacities, scales, rotations), dim=1).cpu().numpy()
+        cloud = spz.GaussianCloud()
+        cloud.sh_degree = sh_degree
+
+        cloud.positions = xyzs.flatten().cpu().numpy()
+        cloud.scales = scales.flatten().cpu().numpy()
+        cloud.rotations = rotations[:, [3, 0, 1, 2]].flatten().cpu().numpy()
+        cloud.alphas = opacities.flatten().cpu().numpy()
+        cloud.colors = f_dc[..., :3].flatten().cpu().numpy()
+        cloud.sh = f_dc[..., 3:].flatten().cpu().numpy()
+
+        spz.save_spz(cloud, spz.PackOptions(), spz_path)
     
-    # 使用recarray直接创建，避免循环和类型转换
-    elements = np.rec.fromarrays([attributes[:, i] for i in range(attributes.shape[1])], names=l, formats=['f4'] * len(l))
-    el = PlyElement.describe(elements, 'vertex')
+    if ply_path is not None:
+        l = ['x', 'y', 'z']
+        # All channels except the 3 DC
+        for i in range(f_dc.shape[1]):
+            l.append('f_dc_{}'.format(i))
+        l.append('opacity')
+        for i in range(scales.shape[1]):
+            l.append('scale_{}'.format(i))
+        for i in range(rotations.shape[1]):
+            l.append('rot_{}'.format(i))
 
-    print(path)
+        dtype_full = [(attribute, 'f4') for attribute in l]
 
-    PlyData([el]).write(path)
+        attributes = torch.cat((xyzs, f_dc, opacities, scales, rotations), dim=1).cpu().numpy()
 
-    # plydata = PlyData([el])
-
-    # vert = plydata["vertex"]
-    # sorted_indices = np.argsort(
-    #     -np.exp(vert["scale_0"] + vert["scale_1"] + vert["scale_2"])
-    #     / (1 + np.exp(-vert["opacity"]))
-    # )
-    # buffer = BytesIO()
-    # for idx in sorted_indices:
-    #     v = plydata["vertex"][idx]
-    #     position = np.array([v["x"], v["y"], v["z"]], dtype=np.float32)
-    #     scales = np.exp(
-    #         np.array(
-    #             [v["scale_0"], v["scale_1"], v["scale_2"]],
-    #             dtype=np.float32,
-    #         )
-    #     )
-    #     rot = np.array(
-    #         [v["rot_0"], v["rot_1"], v["rot_2"], v["rot_3"]],
-    #         dtype=np.float32,
-    #     )
-    #     SH_C0 = 0.28209479177387814
-    #     color = np.array(
-    #         [
-    #             0.5 + SH_C0 * v["f_dc_0"],
-    #             0.5 + SH_C0 * v["f_dc_1"],
-    #             0.5 + SH_C0 * v["f_dc_2"],
-    #             1 / (1 + np.exp(-v["opacity"])),
-    #         ]
-    #     )
-    #     buffer.write(position.tobytes())
-    #     buffer.write(scales.tobytes())
-    #     buffer.write((color * 255).clip(0, 255).astype(np.uint8).tobytes())
-    #     buffer.write(
-    #         ((rot / np.linalg.norm(rot)) * 128 + 128)
-    #         .clip(0, 255)
-    #         .astype(np.uint8)
-    #         .tobytes()
-    #     )
-
-    # with open(path + '.splat', "wb") as f:
-    #     f.write(buffer.getvalue())
+        elements = np.rec.fromarrays([attributes[:, i] for i in range(attributes.shape[1])], names=l, formats=['f4'] * len(l))
+        el = PlyElement.describe(elements, 'vertex')
+        PlyData([el]).write(ply_path)
 
 @torch.amp.autocast(device_type="cuda", enabled=False)
 def quaternion_slerp(

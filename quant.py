@@ -138,7 +138,7 @@ class FP8DynamicLinear(torch.nn.Module):
         super().__init__()
         self.weight = torch.nn.Parameter(weight, requires_grad=False)
         self.weight_scale = torch.nn.Parameter(weight_scale, requires_grad=False)
-        self.bias = bias
+        self.bias = torch.nn.Parameter(bias.to(dtype), requires_grad=False)
         self.native_fp8_support = native_fp8_support
         self.dtype = dtype
 
@@ -186,7 +186,6 @@ def FluxFp8GeMMProcessor(model: torch.nn.Module):
                 weight_scale=weight_scale,
                 bias=bias,
                 native_fp8_support=native_fp8_support,
-                dtype=linear.weight.dtype
             )
             replace_module(model, name, quant_linear)
             del linear.weight

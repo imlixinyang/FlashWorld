@@ -10,6 +10,8 @@ except ImportError:
 import os
 import subprocess
 
+import tqdm
+
 try:
     import gsplat
 except ImportError:
@@ -259,7 +261,7 @@ class GenerationSystem(nn.Module):
         }
 
     @torch.no_grad()
-    def generate(self, cameras, n_frame, image=None, text="", image_index=0, image_height=480, image_width=704, video_output_path=None):  
+    def generate(self, cameras, n_frame, image=None, text="", image_index=0, image_height=480, image_width=704, video_path=None, video_fps=15):  
 
         if mode == "Spaces":
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  
@@ -277,14 +279,16 @@ class GenerationSystem(nn.Module):
             cameras = cameras.to(self.device).unsqueeze(0)
 
             if cameras.shape[1] != n_frame:
-                render_cameras = cameras.clone()
                 cameras = sample_from_dense_cameras(cameras.squeeze(0), torch.linspace(0, 1, n_frame, device=self.device)).unsqueeze(0)
+
+            if video_path is not None:
+                render_cameras = sample_from_dense_cameras(cameras.squeeze(0), torch.linspace(0, 1, (n_frame - 1) * video_fps + 1, device=self.device)).unsqueeze(0)
             else:
-                render_cameras = cameras
+                render_cameras = None
             
             cameras, ref_w2c, T_norm = normalize_cameras(cameras, return_meta=True, n_frame=None)
 
-            render_cameras = normalize_cameras(render_cameras, ref_w2c=ref_w2c, T_norm=T_norm, n_frame=None)
+            render_cameras = normalize_cameras(render_cameras, ref_w2c=ref_w2c, T_norm=T_norm, n_frame=None) if render_cameras is not None else None
 
             text = "[Static] " + text
 
@@ -299,7 +303,7 @@ class GenerationSystem(nn.Module):
                 image = image.to(self.device)
 
                 latent = self.latent_scale_fn(self.vae.encode(
-                        image.unsqueeze(0).unsqueeze(2).to(self.device if not self.offload_vae else "cpu").float()
+                        image.unsqueeze(0).unsqueeze(2).to(self.device if not self.offload_vae else "cpu").to(torch.bfloat16)
                     ).latent_dist.sample().to(self.device)).squeeze(2)
 
                 masks[:, image_index] = 1
@@ -357,125 +361,108 @@ class GenerationSystem(nn.Module):
                                         cameras.to(self.device if not self.offload_vae else "cpu").float()
                                     ).flatten(1, -2).to(self.device).float()
 
-            if video_output_path is not None:
+            if video_path is not None:
                 interpolated_images_pred, _ = self.recon_decoder.render(scene_params.unbind(0), render_cameras, image_height, image_width, bg_mode="white")
 
                 interpolated_images_pred = einops.rearrange(interpolated_images_pred[0].clamp(-1, 1).add(1).div(2), 'T C H W -> T H W C')
 
                 interpolated_images_pred = [torch.cat([img], dim=1).detach().cpu().mul(255).numpy().astype(np.uint8) for i, img in enumerate(interpolated_images_pred.unbind(0))]
 
-                imageio.mimwrite(video_output_path, interpolated_images_pred, fps=15, quality=8, macro_block_size=1) 
+                imageio.mimwrite(video_path, interpolated_images_pred, fps=video_fps, quality=8, macro_block_size=1) 
 
         scene_params = scene_params[0]
 
         return scene_params, ref_w2c, T_norm
 
 @GPU
-def process_generation_request(data, generation_system, cache_dir):
-    """
-    Process the generation request with the same logic as Flask version
-    """
-    try:
-        image_prompt = data.get('image_prompt', None)
-        text_prompt = data.get('text_prompt', "")
-        cameras = data.get('cameras')
-        resolution = data.get('resolution')
-        image_index = data.get('image_index', 0)
+def process_generation_request(data, generation_system, out_dir, video=False, spz=False, ply=False, video_fps=15, video_path=None):
+    image_prompt = data.get('image_prompt', None)
+    text_prompt = data.get('text_prompt', "")
+    cameras = data.get('cameras')
+    resolution = data.get('resolution')
+    image_index = data.get('image_index', 0)
 
-        n_frame, image_height, image_width = resolution
+    n_frame, image_height, image_width = resolution
 
-        if not image_prompt and text_prompt == "":
-            return {'error': 'No Prompts provided'}
+    if not image_prompt and text_prompt == "":
+        return {'error': 'No Prompts provided'}
 
-        if image_prompt:
-            # image_prompt可以是路径和base64
-            if os.path.exists(image_prompt):
-                image_prompt = Image.open(image_prompt)
-            else:
-                # image_prompt 可能是 "data:image/png;base64,...."
-                if ',' in image_prompt:
-                    image_prompt = image_prompt.split(',', 1)[1]
-                
-                try:
-                    image_bytes = base64.b64decode(image_prompt)
-                    image_prompt = Image.open(io.BytesIO(image_bytes))
-                except Exception as img_e:
-                    return {'error': f'Image decode error: {str(img_e)}'}
-
-            image = image_prompt.convert('RGB')
-
-            w, h = image.size
-
-            # center crop
-            if image_height / h > image_width / w:
-                scale = image_height / h
-            else:
-                scale = image_width / w
-                
-            new_h = int(image_height / scale)
-            new_w = int(image_width / scale)
-
-            image = image.crop(((w - new_w) // 2, (h - new_h) // 2, 
-                                new_w + (w - new_w) // 2, new_h + (h - new_h) // 2)).resize((image_width, image_height))
-
-            for camera in cameras:
-                camera['fx'] = camera['fx'] * scale 
-                camera['fy'] = camera['fy'] * scale 
-                camera['cx'] = (camera['cx'] - (w - new_w) // 2) * scale
-                camera['cy'] = (camera['cy'] - (h - new_h) // 2) * scale
-
-            image = torch.from_numpy(np.array(image)).float().permute(2, 0, 1) / 255.0 * 2 - 1
+    if image_prompt:
+        # image_prompt可以是路径和base64
+        if os.path.exists(image_prompt):
+            image_prompt = Image.open(image_prompt)
         else:
-            image = None
+            # image_prompt 可能是 "data:image/png;base64,...."
+            if ',' in image_prompt:
+                image_prompt = image_prompt.split(',', 1)[1]
+            
+            try:
+                image_bytes = base64.b64decode(image_prompt)
+                image_prompt = Image.open(io.BytesIO(image_bytes))
+            except Exception as img_e:
+                return {'error': f'Image decode error: {str(img_e)}'}
 
-        cameras = torch.stack([
-            torch.from_numpy(np.array([camera['quaternion'][0], camera['quaternion'][1], camera['quaternion'][2], camera['quaternion'][3], camera['position'][0], camera['position'][1], camera['position'][2], camera['fx'] / image_width, camera['fy'] / image_height, camera['cx'] / image_width, camera['cy'] / image_height], dtype=np.float32))
-            for camera in cameras
-        ], dim=0)
+        image = image_prompt.convert('RGB')
 
-        file_id = str(int(time.time() * 1000))
+        w, h = image.size
 
-        start_time = time.time()
-        scene_params, ref_w2c, T_norm = generation_system.generate(cameras, n_frame, image, text_prompt, image_index, image_height, image_width, video_output_path=os.path.join(cache_dir, f'{file_id}.mp4'))
-        end_time = time.time()
-        print(f'生成时间: {end_time - start_time} 秒')
+        # center crop
+        if image_height / h > image_width / w:
+            scale = image_height / h
+        else:
+            scale = image_width / w
+            
+        new_h = int(image_height / scale)
+        new_w = int(image_width / scale)
 
-        scene_params = scene_params.detach().cpu()
+        image = image.crop(((w - new_w) // 2, (h - new_h) // 2, 
+                            new_w + (w - new_w) // 2, new_h + (h - new_h) // 2)).resize((image_width, image_height))
 
-        with open(os.path.join(cache_dir, f'{file_id}.json'), 'w') as f:
-            json.dump(data, f)
+        for camera in cameras:
+            camera['fx'] = camera['fx'] * scale 
+            camera['fy'] = camera['fy'] * scale 
+            camera['cx'] = (camera['cx'] - (w - new_w) // 2) * scale
+            camera['cy'] = (camera['cy'] - (h - new_h) // 2) * scale
 
-        splat_path = os.path.join(cache_dir, f'{file_id}.spz')
+        image = torch.from_numpy(np.array(image)).float().permute(2, 0, 1) / 255.0 * 2 - 1
+    else:
+        image = None
 
-        export_gaussians(scene_params, opacity_threshold=0.00025, T_norm=T_norm, spz_path=splat_path)
+    cameras = torch.stack([
+        torch.from_numpy(np.array([camera['quaternion'][0], camera['quaternion'][1], camera['quaternion'][2], camera['quaternion'][3], camera['position'][0], camera['position'][1], camera['position'][2], camera['fx'] / image_width, camera['fy'] / image_height, camera['cx'] / image_width, camera['cy'] / image_height], dtype=np.float32))
+        for camera in cameras
+    ], dim=0)
 
-        if not os.path.exists(splat_path):
-            return {'error': f'{splat_path} not found'}
+    start_time = time.time()
+    scene_params, ref_w2c, T_norm = generation_system.generate(cameras, n_frame, image, text_prompt, image_index, image_height, image_width, video_path=os.path.join(out_dir, 'video.mp4') if video else None)
+    end_time = time.time()
 
-        file_size = os.path.getsize(splat_path)
-        
-        response_data = {
-            'success': True,
-            'file_id': file_id,
-            'file_path': splat_path,
-            'file_size': file_size,
-            'download_url': f'/download/{file_id}',
-            'generation_time': end_time - start_time,
-        }
-        
-        return response_data
+    scene_params = scene_params.detach().cpu()
 
-    except Exception as e:
-        print(f'Processing error: {str(e)}')
-        return {'error': f'Processing error: {str(e)}'}
+    export_gaussians(scene_params, 
+                    opacity_threshold=0.000, 
+                    T_norm=T_norm, 
+                    ply_path=os.path.join(out_dir, 'gaussians.ply') if ply else None, 
+                    spz_path=os.path.join(out_dir, 'gaussians.spz') if spz else None)
+
+    return
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=7860)
     parser.add_argument("--ckpt", default=None)
-    parser.add_argument("--cache_dir", type=str, default=None)
+
     parser.add_argument("--offload_t5", action="store_true")
     parser.add_argument("--offload_vae", action="store_true")
+
+    parser.add_argument("--input_dir", type=str, default=None, required=True)
+    parser.add_argument("--output_dir", type=str, default=None, required=True)
+
+    parser.add_argument("--video", action="store_true")
+    parser.add_argument("--spz", action="store_true")
+    parser.add_argument("--ply", action="store_true")
+
+    parser.add_argument('--video_fps', type=int, default=15)
     args = parser.parse_args()
 
     # Ensure model.ckpt exists, download if not present
@@ -487,191 +474,18 @@ if __name__ == "__main__":
     else:
         ckpt_path = args.ckpt
 
-    if args.cache_dir is None or args.cache_dir == "":
-        GRADIO_TEMP_DIR = tempfile.gettempdir()
-        cache_dir = os.path.join(GRADIO_TEMP_DIR, "flashworld_gradio")
-    else:
-        cache_dir = args.cache_dir
-
-    # Create cache directory
-    os.makedirs(cache_dir, exist_ok=True)
-
     # Initialize GenerationSystem
-    device = torch.device("cpu") if mode == "Spaces" else torch.device("cuda")
+    device = torch.device("cuda")
     generation_system = GenerationSystem(ckpt_path=ckpt_path, device=device, offload_t5=args.offload_t5, offload_vae=args.offload_vae)
 
     print("GenerationSystem initialized!")
 
-    # Create Gradio interface
-    with gr.Blocks(title="FlashWorld Backend") as demo:
-        gr.Markdown("FlashWorld Generation Backend — API only. This service powers the FlashWorld Web Demo and is intended for programmatic/API access. The UI is intentionally hidden.")
-        
-        with gr.Row(visible=False):
-            with gr.Column():
-                json_input = gr.Textbox(
-                    label="JSON Input",
-                    placeholder="Enter JSON request here...",
-                    lines=10,
-                    value='{"image_prompt": null, "text_prompt": "A beautiful landscape", "cameras": [...], "resolution": [16, 480, 704], "image_index": 0}'
-                )
-                
-                generate_btn = gr.Button("Generate", variant="primary")
-                
-            with gr.Column():
-                json_output = gr.Textbox(
-                    label="JSON Output",
-                    lines=10,
-                    interactive=False
-                )
-        
-        # File download section
-        gr.Markdown("## File Download", visible=False)
-        with gr.Row(visible=False):
-            file_id_input = gr.Textbox(
-                label="File ID",
-                placeholder="Enter file ID to download..."
-            )
-            download_btn = gr.Button("Download SPZ File")
-            download_output = gr.File(label="Downloaded File")
-
-        
-        def gradio_generate(json_input):
-            """
-            Gradio interface function that processes JSON input and returns JSON output
-            """
-            try:
-                # Parse JSON input
-                if isinstance(json_input, str):
-                    data = json.loads(json_input)
-                else:
-                    data = json_input
-                    
-                # Process the request
-                result = process_generation_request(data, generation_system, cache_dir)
-                
-                # Return JSON response
-                return json.dumps(result, indent=2)
-                
-            except Exception as e:
-                error_response = {'error': f'JSON processing error: {str(e)}'}
-                return json.dumps(error_response, indent=2)
-
-        def download_file(file_id):
-            """
-            Download generated SPZ file
-            """
-            file_path = os.path.join(cache_dir, f'{file_id}.spz')
-            
-            if not os.path.exists(file_path):
-                return None
-            
-            return file_path
-
-        def gradio_delete(file_id):
-            """
-            Delete generated artifacts by file_id (.spz/.json/.mp4)
-            """
-            deleted = False
-            try:
-                for ext in (".spz", ".json", ".mp4"):
-                    p = os.path.join(cache_dir, f"{file_id}{ext}")
-                    if os.path.exists(p):
-                        try:
-                            os.remove(p)
-                            deleted = True
-                        except Exception:
-                            pass
-                return {"success": True, "deleted": deleted}
-            except Exception as e:
-                return {"success": False, "error": str(e)}
-        
-        # Event handlers
-        generate_btn.click(
-            fn=gradio_generate,
-            inputs=[json_input],
-            outputs=[json_output]
-        )
-        
-        download_btn.click(
-            fn=download_file,
-            inputs=[file_id_input],
-            outputs=[download_output]
-        )
-
-        # Hidden API hook for deletion to expose /gradio_api/call/gradio_delete
-        _hidden_delete_in = gr.Textbox(visible=False)
-        _hidden_delete_btn = gr.Button(visible=False)
-        _hidden_delete_btn.click(fn=gradio_delete, inputs=[_hidden_delete_in], outputs=[])
-        
-        # Example JSON format
-        gr.Markdown("""
-        ## Example JSON Input Format:
-        ```json
-        {
-            "image_prompt": null,
-            "text_prompt": "A beautiful landscape with mountains and trees",
-            "cameras": [
-                {
-                    "quaternion": [0, 0, 0, 1],
-                    "position": [0, 0, 5],
-                    "fx": 500,
-                    "fy": 500,
-                    "cx": 240,
-                    "cy": 240
-                },
-                {
-                    "quaternion": [0, 0, 0, 1],
-                    "position": [0, 0, 5],
-                    "fx": 500,
-                    "fy": 500,
-                    "cx": 240,
-                    "cy": 240
-                }
-            ],
-            "resolution": [16, 480, 704],
-            "image_index": 0
-        }
-        ```
-        """, visible=False)
-
-    # Background periodic cleanup thread (no FastAPI app lifecycle)
-    def _cleanup_loop(directory: str, max_age_seconds: int = 15 * 60, interval_seconds: int = 300):
-        while True:
-            try:
-                now = time.time()
-                for name in os.listdir(directory):
-                    path = os.path.join(directory, name)
-                    try:
-                        if os.path.isfile(path):
-                            mtime = os.path.getmtime(path)
-                            if (now - mtime) > max_age_seconds:
-                                try:
-                                    os.remove(path)
-                                except Exception:
-                                    pass
-                    except Exception:
-                        pass
-            except Exception:
-                pass
-            time.sleep(interval_seconds)
-
-    threading.Thread(target=_cleanup_loop, args=(cache_dir,), daemon=True).start()
-
-    if mode == "Spaces":
-        demo.launch(allowed_paths=[cache_dir])
-    else:
-
-        app = FastAPI()
-
-        # 在/app端口下用fastapi直接返回index.html文件
-        @app.get("/app")
-        def index():
-            return FileResponse("index.html")
-
-        app = gr.mount_gradio_app(app, demo, path="/")
-
-        app.mount("/examples", StaticFiles(directory=os.path.abspath("./examples")), name="examples")
-
-        uvicorn.run(app, port=args.port)
-
-    
+    for json_file in tqdm.tqdm(sorted(os.listdir(args.input_dir))):
+        if json_file.endswith('.json'):
+            json_path = os.path.join(args.input_dir, json_file)
+            with open(json_path, 'r') as f:
+                json_data = json.load(f)
+            out_dir = os.path.join(args.output_dir, json_file.replace('.json', ''))
+            os.makedirs(out_dir, exist_ok=True)
+            result = process_generation_request(json_data, generation_system, out_dir, video=args.video, spz=args.spz, ply=args.ply, video_fps=args.video_fps)
+            # print(f'{json_file} generated successfully')
