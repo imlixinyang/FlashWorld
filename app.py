@@ -259,7 +259,7 @@ class GenerationSystem(nn.Module):
         }
 
     @torch.no_grad()
-    def generate(self, cameras, n_frame, image=None, text="", image_index=0, image_height=480, image_width=704, video_output_path=None):  
+    def generate(self, cameras, n_frame, image=None, text="", image_index=0, image_height=480, image_width=704, video_path=None, video_fps=15):  
 
         if mode == "Spaces":
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  
@@ -277,14 +277,16 @@ class GenerationSystem(nn.Module):
             cameras = cameras.to(self.device).unsqueeze(0)
 
             if cameras.shape[1] != n_frame:
-                render_cameras = cameras.clone()
                 cameras = sample_from_dense_cameras(cameras.squeeze(0), torch.linspace(0, 1, n_frame, device=self.device)).unsqueeze(0)
+
+            if video_path is not None:
+                render_cameras = sample_from_dense_cameras(cameras.squeeze(0), torch.linspace(0, 1, (n_frame - 1) * video_fps + 1, device=self.device)).unsqueeze(0)
             else:
-                render_cameras = cameras
+                render_cameras = None
             
             cameras, ref_w2c, T_norm = normalize_cameras(cameras, return_meta=True, n_frame=None)
 
-            render_cameras = normalize_cameras(render_cameras, ref_w2c=ref_w2c, T_norm=T_norm, n_frame=None)
+            render_cameras = normalize_cameras(render_cameras, ref_w2c=ref_w2c, T_norm=T_norm, n_frame=None) if render_cameras is not None else None
 
             text = "[Static] " + text
 
@@ -299,7 +301,7 @@ class GenerationSystem(nn.Module):
                 image = image.to(self.device)
 
                 latent = self.latent_scale_fn(self.vae.encode(
-                        image.unsqueeze(0).unsqueeze(2).to(self.device if not self.offload_vae else "cpu").float()
+                        image.unsqueeze(0).unsqueeze(2).to(self.device if not self.offload_vae else "cpu").to(torch.bfloat16)
                     ).latent_dist.sample().to(self.device)).squeeze(2)
 
                 masks[:, image_index] = 1
@@ -357,14 +359,14 @@ class GenerationSystem(nn.Module):
                                         cameras.to(self.device if not self.offload_vae else "cpu").float()
                                     ).flatten(1, -2).to(self.device).float()
 
-            if video_output_path is not None:
+            if video_path is not None:
                 interpolated_images_pred, _ = self.recon_decoder.render(scene_params.unbind(0), render_cameras, image_height, image_width, bg_mode="white")
 
                 interpolated_images_pred = einops.rearrange(interpolated_images_pred[0].clamp(-1, 1).add(1).div(2), 'T C H W -> T H W C')
 
                 interpolated_images_pred = [torch.cat([img], dim=1).detach().cpu().mul(255).numpy().astype(np.uint8) for i, img in enumerate(interpolated_images_pred.unbind(0))]
 
-                imageio.mimwrite(video_output_path, interpolated_images_pred, fps=15, quality=8, macro_block_size=1) 
+                imageio.mimwrite(video_path, interpolated_images_pred, fps=video_fps, quality=8, macro_block_size=1) 
 
         scene_params = scene_params[0]
 
