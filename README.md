@@ -19,8 +19,6 @@
 
 ***TL;DR:*** FlashWorld enables fast (**7 seconds on a single A100/A800 GPU**) and high-quality 3D scene generation across diverse scenes, from a single image or text prompt.
 
-FlashWorld also supports generation with only **24GB** GPU memory!
-
 ## Demo
 
 https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
@@ -29,7 +27,9 @@ https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
 
 The code is actively updated. Please stay tuned!
 
-- [2025.10.19] We release a Command Line Interface. If you want to achieve the **best** generation results with FlashWorld, you can create a good input JSON using the Web Interface and then use the CLI to regenerate and render the scene.
+- [2025.10.19] We release a command line interface (CLI). If you want to achieve the **best** generation results with FlashWorld, you can create a good input JSON using the Web Interface and then use the CLI to regenerate and render the scene.
+
+- [2025.10.19] We update the web interface for better logging and faster downloading.
 
 - [2025.10.17] We release an online demo on Huggingface Spaces at [FlashWorld Online Demo](https://huggingface.co/spaces/imlixinyang/FlashWorld-Demo-Spark).
 
