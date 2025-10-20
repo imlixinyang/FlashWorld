@@ -438,7 +438,7 @@ def process_generation_request(data, generation_system, cache_dir):
         file_id = str(int(time.time() * 1000))
 
         start_time = time.time()
-        scene_params, ref_w2c, T_norm = generation_system.generate(cameras, n_frame, image, text_prompt, image_index, image_height, image_width, video_output_path=os.path.join(cache_dir, f'{file_id}.mp4'))
+        scene_params, ref_w2c, T_norm = generation_system.generate(cameras, n_frame, image, text_prompt, image_index, image_height, image_width)
         end_time = time.time()
         print(f'生成时间: {end_time - start_time} 秒')
 
@@ -670,9 +670,21 @@ if __name__ == "__main__":
         def index():
             return FileResponse("index.html")
 
-        app = gr.mount_gradio_app(app, demo, path="/")
+        # # 添加一个测试路由来验证examples目录
+        # @app.get("/test-examples")
+        # def test_examples():
+        #     import os
+        #     examples_dir = os.path.join(os.getcwd(), "examples")
+        #     if os.path.exists(examples_dir):
+        #         files = os.listdir(examples_dir)
+        #         return {"status": "success", "files": files, "directory": examples_dir}
+        #     else:
+        #         return {"status": "error", "message": "examples directory not found"}
 
-        app.mount("/examples", StaticFiles(directory=os.path.abspath("./examples")), name="examples")
+        # 先挂载静态文件，再挂载Gradio应用
+        app.mount("/examples", StaticFiles(directory=os.path.join(os.getcwd(), "examples")), name="examples")
+        
+        app = gr.mount_gradio_app(app, demo, path="/")
 
         uvicorn.run(app, port=args.port)
 
