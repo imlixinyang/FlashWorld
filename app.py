@@ -73,6 +73,7 @@ import time
 import tempfile
 import shutil
 import threading
+from contextlib import contextmanager
 
 from huggingface_hub import hf_hub_download
 
@@ -94,6 +95,32 @@ from diffusers import FlowMatchEulerDiscreteScheduler
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 torch.backends.cuda.enable_flash_sdp(True)
 
+@contextmanager
+def onload_model(model, device, onload=False):
+    """
+    Context manager for moving model to GPU and back to CPU with memory cleanup.
+    
+    Args:
+        model: The model to move between devices
+        device: Target GPU device
+        onload: Whether to onload
+    """
+    if onload and device != "cpu":
+        model.to(device) 
+        try:
+            yield model
+        finally:
+            # Move model back to CPU
+            model.to("cpu")
+            
+            # Clear GPU cache
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
+    else:
+        # If not offloading, just yield the model as-is
+        yield model
+
 class MyFlowMatchEulerDiscreteScheduler(FlowMatchEulerDiscreteScheduler):
     def index_for_timestep(self, timestep, schedule_timesteps=None):
         if schedule_timesteps is None:
@@ -103,11 +130,12 @@ class MyFlowMatchEulerDiscreteScheduler(FlowMatchEulerDiscreteScheduler):
             (timestep - schedule_timesteps.to(timestep.device)).abs(), dim=0).item()
 
 class GenerationSystem(nn.Module):
-    def __init__(self, ckpt_path=None, device="cuda:0", offload_t5=False, offload_vae=False):
+    def __init__(self, ckpt_path=None, device="cuda:0", offload_t5=False, offload_vae=False, offload_transformer_during_vae=False):
         super().__init__()
         self.device = device
         self.offload_t5 = offload_t5
         self.offload_vae = offload_vae
+        self.offload_transformer_during_vae = offload_transformer_during_vae
 
         self.latent_dim = 48
         self.temporal_downsample_factor = 4
@@ -180,7 +208,7 @@ class GenerationSystem(nn.Module):
         self.vae.to(self.device if not self.offload_vae else "cpu").to(torch.bfloat16)
         self.recon_decoder.to(self.device if not self.offload_vae else "cpu").to(torch.bfloat16)
 
-        self.transformer.to(self.device)
+        self.transformer.to(self.device if not self.offload_transformer_during_vae else "cpu")
 
     def latent_scale_fn(self, x):
         return (x - self.latents_mean) / self.latents_std
@@ -225,12 +253,13 @@ class GenerationSystem(nn.Module):
 
     def forward_generator(self, noisy_latents, raymaps, condition_latents, t, text_embeds, cameras, render_cameras, image_height, image_width, need_3d_mode=True):
 
-        out = self.transformer(
-            hidden_states=torch.cat([noisy_latents, raymaps, condition_latents], dim=1),
-            timestep=t,
-            encoder_hidden_states=text_embeds,
-            return_dict=False,
-        )[0]
+        with onload_model(self.transformer, self.device, onload=self.offload_transformer_during_vae):
+            out = self.transformer(
+                hidden_states=torch.cat([noisy_latents, raymaps, condition_latents], dim=1),
+                timestep=t,
+                encoder_hidden_states=text_embeds,
+                return_dict=False,
+            )[0]
 
         v_pred, feats = out.split([self.latent_dim, self.feat_dim], dim=1)
                
@@ -341,12 +370,13 @@ class GenerationSystem(nn.Module):
                     noisy_latents = self.scheduler.scale_noise(latents_pred, self.timesteps[torch.full((noisy_latents.shape[0],), self.denoising_steps[i + 1], device=self.device)], torch.randn_like(noise))
                     
                 else:
-                    out = self.transformer(
-                        hidden_states=torch.cat([noisy_latents, raymaps, _condition_latents], dim=1),
-                        timestep=t,
-                        encoder_hidden_states=text_embeds,
-                        return_dict=False,
-                    )[0]
+                    with onload_model(self.transformer, self.device, onload=self.offload_transformer_during_vae):
+                        out = self.transformer(
+                            hidden_states=torch.cat([noisy_latents, raymaps, _condition_latents], dim=1),
+                            timestep=t,
+                            encoder_hidden_states=text_embeds,
+                            return_dict=False,
+                        )[0]
 
                     v_pred, feats = out.split([self.latent_dim, self.feat_dim], dim=1)
                         
@@ -477,6 +507,7 @@ if __name__ == "__main__":
     parser.add_argument("--ckpt", default=None)
     parser.add_argument("--cache_dir", type=str, default=None)
     parser.add_argument("--offload_t5", action="store_true")
+    parser.add_argument("--offload_transformer_during_vae", action="store_true")
     parser.add_argument("--offload_vae", action="store_true")
     args = parser.parse_args()
 
@@ -500,7 +531,7 @@ if __name__ == "__main__":
 
     # Initialize GenerationSystem
     device = torch.device("cpu") if mode == "Spaces" else torch.device("cuda")
-    generation_system = GenerationSystem(ckpt_path=ckpt_path, device=device, offload_t5=args.offload_t5, offload_vae=args.offload_vae)
+    generation_system = GenerationSystem(ckpt_path=ckpt_path, device=device, offload_t5=args.offload_t5, offload_vae=args.offload_vae, offload_transformer_during_vae=args.offload_transformer_during_vae)
 
     print("GenerationSystem initialized!")
 
