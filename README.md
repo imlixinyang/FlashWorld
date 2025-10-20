@@ -83,6 +83,7 @@ On a single A800 GPU, the generation time and GPU memory usage under different s
 |----------------------|------------|----------------------|
 | 8.5s                 | 51GB       |                      |
 | 16.6s                | 30GB       | --offload_t5         |
+| 20s                  | 24GB       | --offload_t5 --offload_transformer_during_vae|
 | 10min                | 9GB        | --offload_t5 --offload_vae |
 
 ## Command Line Interface
