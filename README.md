@@ -73,7 +73,7 @@ python app.py
 ```
 Then, open your web browser and navigate to ```YOUR_ADDRESS:7860/app``` to start exploring FlashWorld!
 
-If your machine does not have enough GPU memory, add the ```--offload_t5``` flag to offload text encoding to the CPU, which will reduce GPU memory usage with little impact on generation speed.
+If your machine does not have enough GPU memory, add the ```--offload_t5``` and ```--offload_transformer_during_vae``` flags to offload text encoding to the CPU, which will reduce GPU memory usage with little impact on generation speed.
 You can also add the ```--offload_vae``` flag, which will greatly reduce GPU memory usage to below 10GB, but will significantly increase generation time. Please use this flag with caution.
 
 
@@ -99,6 +99,7 @@ Parameters:
 - `--spz`: Export results in SPZ format
 - `--ply`: Export results in PLY format
 - `--video_fps`: Video frame rate (default: 15)
+- some flags are shared with the Local Web Interface
 
 **Note**: The CLI interface provides better rendering results compared to the web interface, as it uses uncompressed Gaussian Parameters. Use the CLI for comparison if you want to use FlashWorld as your baseline.
 
