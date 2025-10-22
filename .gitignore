@@ -2,3 +2,7 @@ tmpfiles/
 model.ckpt
 
 **/__pycache__/**
+.venv/
+*.ply
+
+test_generate.py

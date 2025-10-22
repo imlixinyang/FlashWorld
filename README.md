@@ -108,6 +108,10 @@ Parameters:
 
 [https://github.com/user-attachments/assets/bbdbe5de-5e15-4471-b380-4d8191688d82](https://github.com/user-attachments/assets/53d41748-4c35-48c4-9771-f458421c0b38)
 
+
+## Minimal example
+If you encounter issues running the web interface and just want to check your set up, check out the [minimal example](/examples/minimal) to get started.
+
 ## Citation
 
 ```
