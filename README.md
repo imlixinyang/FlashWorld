@@ -130,3 +130,7 @@ The code is released for academic research use only.
 
 If you have any questions, please contact me via [imlixinyang@gmail.com](mailto:imlixinyang@gmail.com). 
 
+## Acknowledgement
+
+This work is done with [Hunyuan-World Team](https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0)
+
