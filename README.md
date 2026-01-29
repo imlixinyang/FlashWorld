@@ -25,7 +25,9 @@ https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
 
 ## 🔥 News:
 
-The code is actively updated. Please stay tuned!
+- [2025.1.29] Our training code is released. Please fill in a [Google form](https://docs.google.com/forms/d/e/1FAIpQLSc38URe_NFYSwODIBw86qyTSpF1jTq5bIoLPKsUynwBz_cGlQ/viewform) to get access to it.
+
+- [2025.1.27] Our paper is accepted by ICLR 2026! 
 
 - [2025.10.19] We release a command line interface (CLI). If you want to achieve the **best** generation results with FlashWorld, you can create a good input JSON using the Web Interface and then use the CLI to regenerate and render the scene.
 
@@ -102,7 +104,6 @@ Parameters:
 - some flags are shared with the Local Web Interface
 
 **Note**: The CLI interface provides better rendering results compared to the web interface, as it uses uncompressed Gaussian Parameters. Use the CLI for comparison if you want to use FlashWorld as your baseline.
-
   
 ## More Generation Results
 
