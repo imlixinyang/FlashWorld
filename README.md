@@ -25,7 +25,7 @@ https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
 
 ## 🔥 News:
 
-- [2025.1.29] Our training code is released. Please fill in a [Google form](https://docs.google.com/forms/d/e/1FAIpQLSc38URe_NFYSwODIBw86qyTSpF1jTq5bIoLPKsUynwBz_cGlQ/viewform) to get access to it.
+- [2025.1.29] Our **training code** is released. Please fill in a [Google form](https://docs.google.com/forms/d/e/1FAIpQLSc38URe_NFYSwODIBw86qyTSpF1jTq5bIoLPKsUynwBz_cGlQ/viewform) to get access to it, along with the **pre-training checkpoint** at [Huggingface](https://huggingface.co/nightkiller/FlashWorldPretrain).
 
 - [2025.1.27] Our paper is accepted by ICLR 2026! 
 
