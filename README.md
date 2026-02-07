@@ -25,9 +25,11 @@ https://github.com/user-attachments/assets/12ba4776-e7b7-4152-b885-dd6161aa9b4b
 
 ## 🔥 News:
 
-- [2025.1.29] Our **training code** is released. Please fill in a [Google form](https://docs.google.com/forms/d/e/1FAIpQLSc38URe_NFYSwODIBw86qyTSpF1jTq5bIoLPKsUynwBz_cGlQ/viewform) to get access to it. 
+- [2026.2.6] Our paper is selected as an oral presentation in ICLR 2026!
 
-- [2025.1.27] Our paper is accepted by ICLR 2026! 
+- [2026.1.29] Our **training code** is released. Please fill in a [Google form](https://docs.google.com/forms/d/e/1FAIpQLSc38URe_NFYSwODIBw86qyTSpF1jTq5bIoLPKsUynwBz_cGlQ/viewform) to get access to it. 
+
+- [2026.1.27] Our paper is accepted by ICLR 2026! 
 
 - [2025.10.19] We release a command line interface (CLI). If you want to achieve the **best** generation results with FlashWorld, you can create a good input JSON using the Web Interface and then use the CLI to regenerate and render the scene.
 
