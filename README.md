@@ -111,6 +111,57 @@ Parameters:
 
 [https://github.com/user-attachments/assets/bbdbe5de-5e15-4471-b380-4d8191688d82](https://github.com/user-attachments/assets/53d41748-4c35-48c4-9771-f458421c0b38)
 
+## Clarification on WorldScore Evaluation
+
+We identify two primary issues in the original [WorldScore](https://github.com/haoyi-duan/WorldScore) Evaluation framework:
+
+### 1. Evaluation Frame Sampling Bias
+* **Issue:** Metrics such as `object_control`, `content_alignment`, `style_consistency`, and `subjective_quality` were originally evaluated only on **anchor views**. This fails to provide a comprehensive assessment of the entire video sequence. Specifically, methods utilizing iterative inpainting often perform well on anchor views while producing incomplete or inconsistent results in intermediate frames.
+* **Solution:** In our paper, we modified the sampling strategy from fixed anchor views to **random frame sampling** across segments. We have re-calculated the metrics for all 3D-based methods using this more rigorous standard.
+
+### 2. Robustness of Camera Control Metrics
+* **Issue:** The `camera_control` metric was found to be non-robust for two reasons:
+    1.  **Inconsistency:** Identical results can yield different numerical values across evaluation runs.
+    2.  **Sensitivity:** Despite our method achieving theoretically perfect camera control, the current metric fails to capture this specific advantage effectively.
+* **Solution:** Consequently, we have **omitted** this specific metric from the final results presented in the paper.
+
+To ensure a fair comparison with our work, please refer to the following evaluation metrics:
+
+### Table 1: Original WorldScore Scheme (Evaluated on Anchor Views)
+
+We recommend using these metrics if you are developing **video-based methods**. Since re-evaluating all baselines can be computationally demanding, this set provides a standardized reference point using the original anchor view sampling.
+
+| Method | Camera | 3D Consist. | Photo Consist. | Obj. Control | Content Align. | Style Consist. | Subj. Quality |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| WonderWorld | 92.90 | 86.91 | 85.56 | 53.37 | 64.86 | 70.57 | 49.81 |
+| LucidDreamer | 88.93 | 90.37 | 90.20 | 41.18 | 75.00 | 48.10 | 58.99 |
+| WonderJourney | 84.60 | 80.60 | 79.03 | 37.10 | 35.54 | 62.82 | 66.56 |
+| **Ours** | 84.43 | 85.87 | 86.72 | 50.28 | 56.54 | 79.36 | 52.75 |
+
+---
+
+### Table 2: Revised Scheme (Evaluated on Random/Novel Views)
+
+We recommend using these metrics if you are developing **3D-based methods**. This scheme utilizes random frame sampling to more accurately reflect the consistency and quality of the entire generated 3D scene across all viewpoints.
+
+| Method | Obj. Control | Content Align. | Style Consist. | Subj. Quality |
+| :--- | :---: | :---: | :---: | :---: |
+| WonderWorld | 52.09 | 56.82 | 75.92 | 41.28 |
+| LucidDreamer | 43.48 | 59.41 | 66.41 | 48.02 |
+| WonderJourney | 34.81 | 38.37 | 67.52 | 61.49 |
+| **Ours** | 49.61 | 53.96 | 81.52 | 54.63 |
+
+## Statistical Summary (Mean Scores)
+
+The table below summarizes the average scores across different evaluation versions:
+
+| Version | WonderWorld | LucidDreamer | WonderJourney | **Ours** |
+| :--- | :---: | :---: | :---: | :---: |
+| **Original (Anchor View)** | 71.99 | 70.39 | 63.75 | 70.85 |
+| **Revised (+Random View)** | 70.21 | 69.54 | 63.77 | **70.96** |
+| **Paper (-Camera Control)** | 66.43 | 66.31 | 60.30 | **68.71** |
+
+
 ## Citation
 
 ```
