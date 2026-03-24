@@ -165,14 +165,14 @@ The table below summarizes the average scores across different evaluation versio
 ## Citation
 
 ```
-@misc{li2025flashworld,
-        title={FlashWorld: High-quality 3D Scene Generation within Seconds},
-        author={Xinyang Li and Tengfei Wang and Zixiao Gu and Shengchuan Zhang and Chunchao Guo and Liujuan Cao},
-        year={2025},
-        eprint={2510.13678},
-        archivePrefix={arXiv},
-        primaryClass={cs.CV}
-    }
+@inproceedings{
+  li2026flashworld,
+  title={FlashWorld: High-quality 3D Scene Generation within Seconds},
+  author={Xinyang Li and Tengfei Wang and Zixiao Gu and Shengchuan Zhang and Chunchao Guo and Liujuan Cao},
+  booktitle={The Fourteenth International Conference on Learning Representations},
+  year={2026},
+  url={https://openreview.net/forum?id=2IftRjRB07}
+}
 ```
 
 
